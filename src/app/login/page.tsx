@@ -19,9 +19,9 @@ export default function LoginPage() {
 
     if (!result.success) {
       setError(result.error || 'Login failed');
+      setLoading(false);
     }
-
-    setLoading(false);
+    // On success, the component will unmount due to redirect, so no need to update state
   };
 
   return (

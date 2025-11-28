@@ -83,15 +83,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.message || 'Login failed' };
       }
 
-      // Store the token
+      // Store the token and update auth state only if token is received
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
+        authStore.setAuth(true);
+        router.push('/');
+        return { success: true };
       }
-      authStore.setAuth(true);
-      router.push('/');
-      return { success: true };
+      
+      return { success: false, error: 'No authentication token received' };
     } catch {
-      return { success: false, error: 'Network error occurred' };
+      return { success: false, error: 'Unable to connect to server. Please check your connection and try again.' };
     }
   }, [router]);
 
