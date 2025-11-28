@@ -1,0 +1,37 @@
+name: "Enforce PR source is develop"
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, edited]
+
+jobs:
+  branch-source-check:
+    name: branch-source-check
+    runs-on: ubuntu-latest
+    env:
+      PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - name: Show PR head info
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "PR head repo: ${{ github.event.pull_request.head.repo.full_name }}"
+          echo "PR head ref: $PR_HEAD_REF"
+
+      - name: Fail if source branch is not 'develop'
+        run: |
+          if [ "$PR_HEAD_REF" != "develop" ]; then
+            echo "❌ PR source branch is '$PR_HEAD_REF' (must be 'develop'). Failing check."
+            exit 1
+          fi
+          echo "✅ PR source branch is 'develop'."
+
+      - name: Fail if source is not same-repo develop
+        run: |
+          PR_REPO="${{ github.event.pull_request.head.repo.full_name }}"
+          REPO="${{ github.repository }}"
+          PR_REF="${{ github.event.pull_request.head.ref }}"
+          if [ "$PR_REF" != "develop" ] || [ "$PR_REPO" != "$REPO" ]; then
+            echo "❌ PR must come from 'develop' branch in the same repository. (repo:$PR_REPO ref:$PR_REF)"
+            exit 1
+          fi
+          echo "✅ PR is from same-repo develop"
