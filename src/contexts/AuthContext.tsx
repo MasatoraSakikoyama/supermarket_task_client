@@ -16,8 +16,43 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Token storage key
-const TOKEN_STORAGE_KEY = 'auth_token';
+// Token cookie name
+const TOKEN_COOKIE_NAME = 'auth_token';
+
+// Check if we're in a secure context (HTTPS)
+const isSecureContext = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return window.location.protocol === 'https:';
+};
+
+// Cookie utility functions
+const setCookie = (name: string, value: string, days: number = 7): void => {
+  if (typeof document === 'undefined') return;
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  const secure = isSecureContext() ? ';Secure' : '';
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Strict${secure}`;
+};
+
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const nameEQ = `${name}=`;
+  const cookies = document.cookie.split(';');
+  for (let i = 0; i < cookies.length; i++) {
+    let cookie = cookies[i];
+    while (cookie.charAt(0) === ' ') cookie = cookie.substring(1, cookie.length);
+    if (cookie.indexOf(nameEQ) === 0) {
+      return decodeURIComponent(cookie.substring(nameEQ.length, cookie.length));
+    }
+  }
+  return null;
+};
+
+const deleteCookie = (name: string): void => {
+  if (typeof document === 'undefined') return;
+  const secure = isSecureContext() ? ';Secure' : '';
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Strict${secure}`;
+};
 
 // Simple auth store for managing authentication state
 const createAuthStore = () => {
@@ -41,8 +76,8 @@ const createAuthStore = () => {
   };
   
   const initialize = () => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (typeof document !== 'undefined') {
+      const token = getCookie(TOKEN_COOKIE_NAME);
       state = { isAuthenticated: !!token, isLoading: false };
       listeners.forEach(listener => listener());
     }
@@ -64,12 +99,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Get token from localStorage
+  // Get token from cookie
   const getToken = useCallback((): string | null => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(TOKEN_STORAGE_KEY);
-    }
-    return null;
+    return getCookie(TOKEN_COOKIE_NAME);
   }, []);
 
   // Validate token and fetch user info on mount
@@ -85,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           authStore.setAuth(true, false);
         } else if (response.status === 401) {
           // Token is invalid (unauthorized), clear it
-          localStorage.removeItem(TOKEN_STORAGE_KEY);
+          deleteCookie(TOKEN_COOKIE_NAME);
           setToken(null);
           setUser(null);
           authStore.setAuth(false, false);
@@ -121,8 +153,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.data?.access_token) {
         const accessToken = response.data.access_token;
         
-        // Store the token
-        localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
+        // Store the token in cookie
+        setCookie(TOKEN_COOKIE_NAME, accessToken);
         setToken(accessToken);
 
         // Fetch user info
@@ -151,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Clear local state
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    deleteCookie(TOKEN_COOKIE_NAME);
     setToken(null);
     setUser(null);
     authStore.setAuth(false);
