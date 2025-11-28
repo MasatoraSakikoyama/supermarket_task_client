@@ -17,7 +17,13 @@ const PORT = process.env.PORT || 3000;
 
 // Load OpenAPI specification
 const openapiPath = path.join(__dirname, "..", "public", "openapi.json");
-const openApiSpec = JSON.parse(fs.readFileSync(openapiPath, "utf-8"));
+let openApiSpec: object;
+try {
+  openApiSpec = JSON.parse(fs.readFileSync(openapiPath, "utf-8")) as object;
+} catch (error) {
+  console.error(`Failed to load OpenAPI specification from ${openapiPath}:`, error);
+  process.exit(1);
+}
 
 // Serve OpenAPI JSON
 app.get("/openapi.json", (_req, res) => {

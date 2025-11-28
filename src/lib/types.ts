@@ -37,7 +37,7 @@ export interface ShopBase {
 export interface ShopCreate extends ShopBase {}
 
 export interface ShopUpdate {
-  name?: string;
+  name?: string | null;
   description?: string | null;
 }
 
@@ -56,7 +56,7 @@ export interface ShopSettlementBase {
 export interface ShopSettlementCreate extends ShopSettlementBase {}
 
 export interface ShopSettlementUpdate {
-  name?: string;
+  name?: string | null;
   description?: string | null;
 }
 
