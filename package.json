@@ -1,0 +1,31 @@
+{
+  "name": "supermarket_task_client",
+  "version": "1.0.0",
+  "description": "TypeScript client library for Supermarket Task Server API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsc && node dist/server.js",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["api", "client", "supermarket", "fastapi", "typescript"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.1",
+    "@types/swagger-ui-express": "^4.1.8",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "files": [
+    "dist",
+    "public"
+  ]
+}
