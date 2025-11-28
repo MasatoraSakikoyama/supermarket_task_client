@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navigation from "@/components/Navigation";
+import { AuthProvider } from "@/contexts/AuthContext";
+import AppContent from "@/components/AppContent";
 
 export const metadata: Metadata = {
   title: "Supermarket Task App",
@@ -15,10 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <Navigation />
-        <main className="container mx-auto p-4">
-          {children}
-        </main>
+        <AuthProvider>
+          <AppContent>{children}</AppContent>
+        </AuthProvider>
       </body>
     </html>
   );
