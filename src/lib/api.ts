@@ -17,22 +17,6 @@ import {
   ShopSettlementResponse,
 } from './type';
 
-// Re-export types for backward compatibility
-export type {
-  ApiResponse,
-  ApiRequestOptions,
-  AccountCreate,
-  AccountResponse,
-  LoginRequest,
-  TokenResponse,
-  ShopCreate,
-  ShopUpdate,
-  ShopResponse,
-  ShopSettlementCreate,
-  ShopSettlementUpdate,
-  ShopSettlementResponse,
-};
-
 // Base API URL - should be configured via environment variable
 const API_BASE_URL = process.env.API_BASE_URL || '';
 
