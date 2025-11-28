@@ -2,88 +2,39 @@
  * Web API utility functions for making HTTP requests
  */
 
+import {
+  ApiResponse,
+  ApiRequestOptions,
+  AccountCreate,
+  AccountResponse,
+  LoginRequest,
+  TokenResponse,
+  ShopCreate,
+  ShopUpdate,
+  ShopResponse,
+  ShopSettlementCreate,
+  ShopSettlementUpdate,
+  ShopSettlementResponse,
+} from './type';
+
+// Re-export types for backward compatibility
+export type {
+  ApiResponse,
+  ApiRequestOptions,
+  AccountCreate,
+  AccountResponse,
+  LoginRequest,
+  TokenResponse,
+  ShopCreate,
+  ShopUpdate,
+  ShopResponse,
+  ShopSettlementCreate,
+  ShopSettlementUpdate,
+  ShopSettlementResponse,
+};
+
 // Base API URL - should be configured via environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
-export interface ApiResponse<T> {
-  data: T | null;
-  error: string | null;
-  status: number;
-}
-
-export interface ApiRequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  headers?: Record<string, string>;
-  body?: unknown;
-}
-
-// =============================================================================
-// Type Definitions
-// =============================================================================
-
-// Auth Types
-export interface AccountCreate {
-  username: string;
-  email: string;
-  password: string;
-}
-
-export interface AccountResponse {
-  id: number;
-  username: string;
-  email: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-export interface TokenResponse {
-  access_token: string;
-  token_type: string;
-}
-
-// Shop Types
-export interface ShopCreate {
-  name: string;
-  description?: string;
-}
-
-export interface ShopUpdate {
-  name?: string;
-  description?: string;
-}
-
-export interface ShopResponse {
-  id: number;
-  name: string;
-  description: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-// Shop Settlement Types
-export interface ShopSettlementCreate {
-  name: string;
-  description?: string;
-}
-
-export interface ShopSettlementUpdate {
-  name?: string;
-  description?: string;
-}
-
-export interface ShopSettlementResponse {
-  id: number;
-  shop_id: number;
-  name: string;
-  description: string | null;
-  created_at: string;
-  updated_at: string;
-}
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',

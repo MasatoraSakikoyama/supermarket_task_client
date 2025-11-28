@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useEffect, ReactNode, useCallback, useSyncExternalStore, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { authLogin, authLogout, authMe, AccountResponse } from '@/lib/api';
+import { authLogin, authLogout, authMe } from '@/lib/api';
+import { AccountResponse } from '@/lib/type';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -17,21 +18,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Token cookie name
-const TOKEN_COOKIE_NAME = 'auth_token';
-
-// Check if we're in a secure context (HTTPS)
-const isSecureContext = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  return window.location.protocol === 'https:';
-};
+const TOKEN_COOKIE_NAME = 'supermarket_task_auth_token';
 
 // Cookie utility functions
 const setCookie = (name: string, value: string, days: number = 7): void => {
   if (typeof document === 'undefined') return;
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  const secure = isSecureContext() ? ';Secure' : '';
-  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Strict${secure}`;
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Strict;Secure`;
 };
 
 const getCookie = (name: string): string | null => {
@@ -50,8 +44,7 @@ const getCookie = (name: string): string | null => {
 
 const deleteCookie = (name: string): void => {
   if (typeof document === 'undefined') return;
-  const secure = isSecureContext() ? ';Secure' : '';
-  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Strict${secure}`;
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Strict;Secure`;
 };
 
 // Simple auth store for managing authentication state
