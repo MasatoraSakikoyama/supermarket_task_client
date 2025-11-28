@@ -1,13 +1,11 @@
 # Supermarket Task Client
 
-TypeScript client library for the Supermarket Task Server API with built-in API documentation endpoints.
+TypeScript client library for the Supermarket Task Server API.
 
 ## Features
 
 - **API Client**: TypeScript API client library (`src/lib/api.ts`) with full type definitions
-- **OpenAPI Specification**: Complete OpenAPI 3.1 specification (`/openapi.json`)
-- **Swagger UI**: Interactive API documentation (`/docs`)
-- **ReDoc**: Beautiful API documentation (`/redoc`)
+- **OpenAPI Specification**: Complete OpenAPI 3.1 specification (`public/openapi.json`)
 
 ## Installation
 
@@ -22,22 +20,6 @@ npm run build
 ```
 
 ## Usage
-
-### Running the Documentation Server
-
-Start the Express server to serve API documentation:
-
-```bash
-npm start
-```
-
-The server will be available at http://localhost:3000 with the following endpoints:
-- `/` - Root endpoint with links to documentation
-- `/openapi.json` - OpenAPI specification
-- `/docs` - Swagger UI interactive documentation
-- `/redoc` - ReDoc documentation
-
-### Using the API Client Library
 
 ```typescript
 import { createApiClient } from 'supermarket_task_client';
@@ -115,8 +97,7 @@ async function example() {
 │   ├── lib/
 │   │   ├── api.ts        # API client library
 │   │   └── types.ts      # TypeScript type definitions
-│   ├── index.ts          # Library entry point
-│   └── server.ts         # Express documentation server
+│   └── index.ts          # Library entry point
 ├── package.json
 ├── tsconfig.json
 └── README.md
