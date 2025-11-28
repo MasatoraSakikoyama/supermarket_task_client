@@ -49,12 +49,12 @@ export interface TokenResponse {
 // Shop Types
 export interface ShopCreate {
   name: string;
-  description?: string | null;
+  description?: string;
 }
 
 export interface ShopUpdate {
-  name?: string | null;
-  description?: string | null;
+  name?: string;
+  description?: string;
 }
 
 export interface ShopResponse {
@@ -68,12 +68,12 @@ export interface ShopResponse {
 // Shop Settlement Types
 export interface ShopSettlementCreate {
   name: string;
-  description?: string | null;
+  description?: string;
 }
 
 export interface ShopSettlementUpdate {
-  name?: string | null;
-  description?: string | null;
+  name?: string;
+  description?: string;
 }
 
 export interface ShopSettlementResponse {
