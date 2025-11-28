@@ -2,17 +2,23 @@
  * Web API utility functions for making HTTP requests
  */
 
-export interface ApiResponse<T> {
-  data: T | null;
-  error: string | null;
-  status: number;
-}
+import {
+  ApiResponse,
+  ApiRequestOptions,
+  AccountCreate,
+  AccountResponse,
+  LoginRequest,
+  TokenResponse,
+  ShopCreate,
+  ShopUpdate,
+  ShopResponse,
+  ShopSettlementCreate,
+  ShopSettlementUpdate,
+  ShopSettlementResponse,
+} from './type';
 
-export interface ApiRequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  headers?: Record<string, string>;
-  body?: unknown;
-}
+// Base API URL - should be configured via environment variable
+const API_BASE_URL = process.env.API_BASE_URL || '';
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
@@ -114,4 +120,170 @@ export async function patch<T>(
   headers?: Record<string, string>
 ): Promise<ApiResponse<T>> {
   return apiRequest<T>(url, { method: 'PATCH', body, headers });
+}
+
+// =============================================================================
+// Authentication API
+// =============================================================================
+
+/**
+ * Register a new user account
+ */
+export async function authRegister(data: AccountCreate): Promise<ApiResponse<AccountResponse>> {
+  return post<AccountResponse>(`${API_BASE_URL}/auth/register`, data);
+}
+
+/**
+ * Login and get access token
+ */
+export async function authLogin(data: LoginRequest): Promise<ApiResponse<TokenResponse>> {
+  return post<TokenResponse>(`${API_BASE_URL}/auth/login`, data);
+}
+
+/**
+ * Logout and invalidate token
+ */
+export async function authLogout(token: string): Promise<ApiResponse<null>> {
+  return post<null>(`${API_BASE_URL}/auth/logout`, {}, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Get current user information
+ */
+export async function authMe(token: string): Promise<ApiResponse<AccountResponse>> {
+  return get<AccountResponse>(`${API_BASE_URL}/auth/me`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+// =============================================================================
+// Shops API
+// =============================================================================
+
+/**
+ * Get all shops with pagination
+ */
+export async function getShops(
+  token: string,
+  skip: number = 0,
+  limit: number = 100
+): Promise<ApiResponse<ShopResponse[]>> {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+  return get<ShopResponse[]>(`${API_BASE_URL}/shops?${params}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Get a single shop by ID
+ */
+export async function getShop(token: string, shopId: number): Promise<ApiResponse<ShopResponse>> {
+  return get<ShopResponse>(`${API_BASE_URL}/shops/${shopId}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Create a new shop
+ */
+export async function createShop(token: string, data: ShopCreate): Promise<ApiResponse<ShopResponse>> {
+  return post<ShopResponse>(`${API_BASE_URL}/shops`, data, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Update an existing shop
+ */
+export async function updateShop(
+  token: string,
+  shopId: number,
+  data: ShopUpdate
+): Promise<ApiResponse<ShopResponse>> {
+  return put<ShopResponse>(`${API_BASE_URL}/shops/${shopId}`, data, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Delete a shop
+ */
+export async function deleteShop(token: string, shopId: number): Promise<ApiResponse<null>> {
+  return del<null>(`${API_BASE_URL}/shops/${shopId}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+// =============================================================================
+// Shop Settlements API
+// =============================================================================
+
+/**
+ * Get all settlements for a shop with pagination
+ */
+export async function getShopSettlements(
+  token: string,
+  shopId: number,
+  skip: number = 0,
+  limit: number = 100
+): Promise<ApiResponse<ShopSettlementResponse[]>> {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+  return get<ShopSettlementResponse[]>(`${API_BASE_URL}/shops/${shopId}/settlements?${params}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Get a single settlement by ID for a shop
+ */
+export async function getShopSettlement(
+  token: string,
+  shopId: number,
+  settlementId: number
+): Promise<ApiResponse<ShopSettlementResponse>> {
+  return get<ShopSettlementResponse>(`${API_BASE_URL}/shops/${shopId}/settlements/${settlementId}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Create a new settlement for a shop
+ */
+export async function createShopSettlement(
+  token: string,
+  shopId: number,
+  data: ShopSettlementCreate
+): Promise<ApiResponse<ShopSettlementResponse>> {
+  return post<ShopSettlementResponse>(`${API_BASE_URL}/shops/${shopId}/settlements`, data, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Update an existing settlement for a shop
+ */
+export async function updateShopSettlement(
+  token: string,
+  shopId: number,
+  settlementId: number,
+  data: ShopSettlementUpdate
+): Promise<ApiResponse<ShopSettlementResponse>> {
+  return put<ShopSettlementResponse>(`${API_BASE_URL}/shops/${shopId}/settlements/${settlementId}`, data, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Delete a settlement for a shop
+ */
+export async function deleteShopSettlement(
+  token: string,
+  shopId: number,
+  settlementId: number
+): Promise<ApiResponse<null>> {
+  return del<null>(`${API_BASE_URL}/shops/${shopId}/settlements/${settlementId}`, {
+    'Authorization': `Bearer ${token}`,
+  });
 }
