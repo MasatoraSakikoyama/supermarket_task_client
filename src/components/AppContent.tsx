@@ -24,11 +24,11 @@ export default function AppContent({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <>
+    <div className="flex min-h-screen">
       {showNavigation && <Navigation />}
-      <main className="container mx-auto p-4">
+      <main className="flex-1 p-4">
         {children}
       </main>
-    </>
+    </div>
   );
 }
