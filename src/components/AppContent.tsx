@@ -1,0 +1,34 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
+import Navigation from './Navigation';
+import { useAuth } from '@/contexts/AuthContext';
+
+export default function AppContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  // Don't show navigation on login page (root path)
+  const showNavigation = pathname !== '/' && isAuthenticated;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (pathname === '/') {
+    return <>{children}</>;
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      {showNavigation && <Navigation />}
+      <main className="flex-1 p-4">
+        {children}
+      </main>
+    </div>
+  );
+}
