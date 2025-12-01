@@ -25,7 +25,7 @@ export default function Navigation() {
           </Link>
           {user && (
             <div className="text-sm text-gray-300 mt-1">
-              ようこそ{user.username}さん
+              Welcome {user.username}
             </div>
           )}
         </div>
