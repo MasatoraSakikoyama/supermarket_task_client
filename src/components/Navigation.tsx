@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
-  { href: '/', label: 'Home' },
+  { href: '/home', label: 'Home' },
   { href: '/summary', label: 'Summary' },
   { href: '/register', label: 'Register' },
   { href: '/update', label: 'Update' },
@@ -19,7 +19,7 @@ export default function Navigation() {
   return (
     <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex flex-wrap items-center justify-between">
-        <Link href="/" className="text-xl font-bold">
+        <Link href="/home" className="text-xl font-bold">
           Supermarket Task
         </Link>
         <div className="flex flex-wrap items-center gap-4">

@@ -1,45 +1,82 @@
-import Link from 'next/link';
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+
+export default function LoginPage() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const result = await login(username, password);
+
+    if (!result.success) {
+      setError(result.error || 'Login failed');
+      setLoading(false);
+    }
+    // On success, the component will unmount due to redirect, so no need to update state
+  };
+
   return (
-    <div className="py-8">
-      <h1 className="text-3xl font-bold mb-6">Supermarket Task Management</h1>
-      <p className="text-gray-600 mb-8">
-        Welcome to the Supermarket Task Management application. Select a page to get started.
-      </p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Link 
-          href="/summary"
-          className="block p-6 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-        >
-          <h2 className="text-xl font-semibold text-blue-800 mb-2">Summary</h2>
-          <p className="text-gray-600">View summary of all tasks and data</p>
-        </Link>
-        
-        <Link 
-          href="/register"
-          className="block p-6 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
-        >
-          <h2 className="text-xl font-semibold text-green-800 mb-2">Register</h2>
-          <p className="text-gray-600">Register new items or tasks</p>
-        </Link>
-        
-        <Link 
-          href="/update"
-          className="block p-6 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors"
-        >
-          <h2 className="text-xl font-semibold text-yellow-800 mb-2">Update</h2>
-          <p className="text-gray-600">Update existing items or tasks</p>
-        </Link>
-        
-        <Link 
-          href="/delete"
-          className="block p-6 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
-        >
-          <h2 className="text-xl font-semibold text-red-800 mb-2">Delete</h2>
-          <p className="text-gray-600">Delete items or tasks</p>
-        </Link>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8">
+        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">Login</h1>
+        <p className="text-gray-600 text-center mb-6">
+          Please enter your credentials to access the Supermarket Task Management application.
+        </p>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your username"
+            />
+          </div>
+
+          <div className="mb-6">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your password"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
       </div>
     </div>
   );

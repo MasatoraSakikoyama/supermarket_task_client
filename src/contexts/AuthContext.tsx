@@ -128,9 +128,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [getToken]);
 
   useEffect(() => {
-    // Redirect to login if not authenticated and not already on login page
-    if (!authState.isLoading && !authState.isAuthenticated && pathname !== '/login') {
-      router.push('/login');
+    // Redirect to login (root) if not authenticated and not already on login page
+    if (!authState.isLoading && !authState.isAuthenticated && pathname !== '/') {
+      router.push('/');
     }
   }, [authState.isAuthenticated, authState.isLoading, pathname, router]);
 
@@ -157,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         authStore.setAuth(true);
-        router.push('/');
+        router.push('/home');
         return { success: true };
       }
       
@@ -180,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
     authStore.setAuth(false);
-    router.push('/login');
+    router.push('/');
   }, [router, getToken]);
 
   return (

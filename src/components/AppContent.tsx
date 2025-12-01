@@ -8,8 +8,8 @@ export default function AppContent({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const { isAuthenticated, isLoading } = useAuth();
   
-  // Don't show navigation on login page
-  const showNavigation = pathname !== '/login' && isAuthenticated;
+  // Don't show navigation on login page (root path)
+  const showNavigation = pathname !== '/' && isAuthenticated;
 
   if (isLoading) {
     return (
@@ -19,7 +19,7 @@ export default function AppContent({ children }: { children: React.ReactNode }) 
     );
   }
 
-  if (pathname === '/login') {
+  if (pathname === '/') {
     return <>{children}</>;
   }
 
