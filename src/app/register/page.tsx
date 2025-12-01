@@ -51,15 +51,15 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="py-8">
-      <h1 className="text-3xl font-bold mb-6">Register</h1>
-      <p className="text-gray-600 mb-6">
+    <div className="py-4 md:py-8">
+      <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Register</h1>
+      <p className="text-gray-600 mb-4 md:mb-6 text-sm md:text-base">
         Register new items. Fill out the form below and submit to add new data via the Web API.
       </p>
 
       {message && (
         <div
-          className={`mb-6 p-4 rounded-md ${
+          className={`mb-4 md:mb-6 p-4 rounded-md text-sm ${
             message.type === 'success'
               ? 'bg-green-50 border border-green-200 text-green-700'
               : 'bg-red-50 border border-red-200 text-red-700'
@@ -69,7 +69,7 @@ export default function RegisterPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="max-w-md bg-white shadow rounded-lg p-6">
+      <form onSubmit={handleSubmit} className="max-w-full md:max-w-md bg-white shadow rounded-lg p-4 md:p-6">
         <div className="mb-4">
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
             Name
@@ -81,7 +81,7 @@ export default function RegisterPage() {
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
             placeholder="Enter item name"
           />
         </div>
@@ -98,12 +98,12 @@ export default function RegisterPage() {
             onChange={handleChange}
             required
             min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
             placeholder="Enter quantity"
           />
         </div>
 
-        <div className="mb-6">
+        <div className="mb-4 md:mb-6">
           <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
             Price
           </label>
@@ -116,7 +116,7 @@ export default function RegisterPage() {
             required
             min="0"
             step="0.01"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
             placeholder="Enter price"
           />
         </div>
@@ -124,7 +124,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
         >
           {loading ? 'Registering...' : 'Register Item'}
         </button>
