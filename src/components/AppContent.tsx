@@ -7,7 +7,7 @@ import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isAuthenticated, isLoading, logout } = useAuth();
+  const { isAuthenticated, isLoading, logout, user } = useAuth();
   const { isOpen, toggle, close } = useSidebar();
   
   // Don't show navigation on login page (root path)
@@ -60,10 +60,12 @@ function AppLayout({ children }: { children: React.ReactNode }) {
                 />
               </svg>
             </button>
-            <h2 className="text-lg font-semibold text-gray-800">
-              Supermarket Task
-            </h2>
             <div className="flex-1"></div>
+            {user && (
+              <div className="text-sm text-gray-600">
+                Welcome {user.username}
+              </div>
+            )}
             <button
               onClick={logout}
               className="px-3 py-2 bg-red-600 rounded-md text-white hover:bg-red-700 transition-colors"

@@ -14,7 +14,6 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { user } = useAuth();
   const { isOpen, close } = useSidebar();
 
   const handleLinkClick = () => {
@@ -35,11 +34,6 @@ export default function Navigation() {
       `}
     >
       <div className={`p-4 flex flex-col h-full ${isOpen ? '' : 'md:hidden'}`}>
-        {user && (
-          <div className="mb-8 text-sm text-gray-300">
-            Welcome {user.username}
-          </div>
-        )}
         <ul className="flex flex-col gap-2">
           {navItems.map((item) => (
             <li key={item.href}>
