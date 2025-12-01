@@ -14,14 +14,21 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   return (
     <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex flex-wrap items-center justify-between">
-        <Link href="/home" className="text-xl font-bold">
-          Supermarket Task
-        </Link>
+        <div>
+          <Link href="/home" className="text-xl font-bold block">
+            Supermarket Task
+          </Link>
+          {user && (
+            <div className="text-sm text-gray-300 mt-1">
+              ようこそ{user.username}さん
+            </div>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-4">
           <ul className="flex flex-wrap gap-4">
             {navItems.map((item) => (
