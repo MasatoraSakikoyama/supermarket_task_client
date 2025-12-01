@@ -17,43 +17,40 @@ export default function Navigation() {
   const { logout, user } = useAuth();
 
   return (
-    <nav className="bg-gray-800 text-white p-4">
-      <div className="container mx-auto flex flex-wrap items-center justify-between">
-        <div>
-          <Link href="/home" className="text-xl font-bold block">
-            Supermarket Task
-          </Link>
-          {user && (
-            <div className="text-sm text-gray-300 mt-1">
-              Welcome {user.username}
-            </div>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <ul className="flex flex-wrap gap-4">
-            {navItems.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`px-3 py-2 rounded-md transition-colors ${
-                    pathname === item.href
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <button
-            onClick={logout}
-            className="px-3 py-2 bg-red-600 rounded-md text-white hover:bg-red-700 transition-colors"
-          >
-            Logout
-          </button>
-        </div>
+    <nav className="bg-gray-800 text-white p-4 w-64 min-h-screen flex flex-col">
+      <div className="mb-8">
+        <Link href="/home" className="text-xl font-bold block">
+          Supermarket Task
+        </Link>
+        {user && (
+          <div className="text-sm text-gray-300 mt-1">
+            Welcome {user.username}
+          </div>
+        )}
       </div>
+      <ul className="flex flex-col gap-2">
+        {navItems.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              className={`block px-3 py-2 rounded-md transition-colors ${
+                pathname === item.href
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`}
+            >
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <div className="flex-1"></div>
+      <button
+        onClick={logout}
+        className="px-3 py-2 bg-red-600 rounded-md text-white hover:bg-red-700 transition-colors"
+      >
+        Logout
+      </button>
     </nav>
   );
 }
