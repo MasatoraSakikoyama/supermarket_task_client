@@ -157,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         authStore.setAuth(true);
-        router.push('/home');
+        router.push('/summary');
         return { success: true };
       }
       
