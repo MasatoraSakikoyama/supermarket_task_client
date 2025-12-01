@@ -10,7 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   user: AccountResponse | null;
   token: string | null;
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   getToken: () => string | null;
 }
@@ -134,10 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [authState.isAuthenticated, authState.isLoading, pathname, router]);
 
-  const login = useCallback(async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       // Call the server API to login
-      const response = await authLogin({ username, password });
+      const response = await authLogin({ email, password });
 
       if (response.error) {
         return { success: false, error: response.error };
