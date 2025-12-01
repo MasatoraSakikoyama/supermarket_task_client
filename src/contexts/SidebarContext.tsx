@@ -17,18 +17,22 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   // Close sidebar on mobile by default
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setIsOpen(false);
-      } else {
-        setIsOpen(true);
+      if (typeof window !== 'undefined') {
+        if (window.innerWidth < 768) {
+          setIsOpen(false);
+        } else {
+          setIsOpen(true);
+        }
       }
     };
 
     // Set initial state
     handleResize();
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
   }, []);
 
   const toggle = () => setIsOpen((prev) => !prev);
