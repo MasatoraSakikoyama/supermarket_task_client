@@ -28,7 +28,7 @@ export default function Navigation() {
           </div>
         )}
       </div>
-      <ul className="flex flex-col gap-2 flex-1">
+      <ul className="flex flex-col gap-2">
         {navItems.map((item) => (
           <li key={item.href}>
             <Link
@@ -44,9 +44,10 @@ export default function Navigation() {
           </li>
         ))}
       </ul>
+      <div className="flex-1"></div>
       <button
         onClick={logout}
-        className="px-3 py-2 bg-red-600 rounded-md text-white hover:bg-red-700 transition-colors mt-4"
+        className="px-3 py-2 bg-red-600 rounded-md text-white hover:bg-red-700 transition-colors"
       >
         Logout
       </button>
