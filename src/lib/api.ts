@@ -18,7 +18,7 @@ import {
 } from './type';
 
 // Base API URL - should be configured via environment variable
-const API_BASE_URL = process.env.API_BASE_URL || '';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
