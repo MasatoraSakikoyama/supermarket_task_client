@@ -112,13 +112,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Derive user state from userResponse
   const user = userResponse?.data || null;
 
-  // Handle token invalidation when we receive 401
+  // Synchronize token state with API response (401 = invalid token)
+  // This is a legitimate case for setState in effect as we're syncing with external system (API)
   useEffect(() => {
     if (token && userResponse?.status === 401) {
-      // Token is invalid - clear it asynchronously
       deleteCookie(TOKEN_COOKIE_NAME);
-      // Use timeout to avoid synchronous setState in effect
-      setTimeout(() => setToken(null), 0);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronizing with external system (API auth state)
+      setToken(null);
       authStore.setAuth(false, false);
     }
   }, [token, userResponse?.status]);
