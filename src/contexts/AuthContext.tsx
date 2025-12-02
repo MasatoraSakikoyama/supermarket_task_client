@@ -1,156 +1,78 @@
 'use client';
 
-import { createContext, useContext, useEffect, ReactNode, useCallback, useSyncExternalStore, useState } from 'react';
+import { ReactNode, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthLogin, useAuthLogout, useAuthMe } from '@/lib/hooks';
-import { AccountResponse } from '@/lib/type';
+import { useAuthStore } from '@/stores/useAuthStore';
 
-interface AuthContextType {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: AccountResponse | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
-  getToken: () => string | null;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Token cookie name
-const TOKEN_COOKIE_NAME = 'supermarket_task_auth_token';
-
-// Cookie utility functions
-const setCookie = (name: string, value: string, days: number = 7): void => {
-  if (typeof document === 'undefined') return;
-  const expires = new Date();
-  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Strict;Secure`;
-};
-
-const getCookie = (name: string): string | null => {
-  if (typeof document === 'undefined') return null;
-  const nameEQ = `${name}=`;
-  const cookies = document.cookie.split(';');
-  for (let i = 0; i < cookies.length; i++) {
-    let cookie = cookies[i];
-    while (cookie.charAt(0) === ' ') cookie = cookie.substring(1, cookie.length);
-    if (cookie.indexOf(nameEQ) === 0) {
-      return decodeURIComponent(cookie.substring(nameEQ.length, cookie.length));
-    }
-  }
-  return null;
-};
-
-const deleteCookie = (name: string): void => {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Strict;Secure`;
-};
-
-// Simple auth store for managing authentication state
-const createAuthStore = () => {
-  let state = { isAuthenticated: false, isLoading: true };
-  const serverSnapshot = { isAuthenticated: false, isLoading: true };
-  let listeners: (() => void)[] = [];
-  
-  const getSnapshot = () => state;
-  const getServerSnapshot = () => serverSnapshot;
-  
-  const subscribe = (listener: () => void) => {
-    listeners.push(listener);
-    return () => {
-      listeners = listeners.filter(l => l !== listener);
-    };
-  };
-  
-  const setAuth = (isAuthenticated: boolean, isLoading: boolean = false) => {
-    state = { isAuthenticated, isLoading };
-    listeners.forEach(listener => listener());
-  };
-  
-  const initialize = () => {
-    if (typeof document !== 'undefined') {
-      const token = getCookie(TOKEN_COOKIE_NAME);
-      state = { isAuthenticated: !!token, isLoading: false };
-      listeners.forEach(listener => listener());
-    }
-  };
-  
-  return { getSnapshot, getServerSnapshot, subscribe, setAuth, initialize };
-};
-
-const authStore = createAuthStore();
-
+/**
+ * AuthProvider component - now using Zustand for state management
+ * Maintains TanStack Query integration for API calls
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const authState = useSyncExternalStore(
-    authStore.subscribe,
-    authStore.getSnapshot,
-    authStore.getServerSnapshot
-  );
-  const [token, setToken] = useState<string | null>(() => {
-    // Initialize token from cookie on first render
-    if (typeof document !== 'undefined') {
-      return getCookie(TOKEN_COOKIE_NAME);
-    }
-    return null;
-  });
   const router = useRouter();
   const pathname = usePathname();
-
-  // TanStack Query hooks
-  const loginMutation = useAuthLogin();
-  const logoutMutation = useAuthLogout();
-
-  // Get token from cookie
-  const getToken = useCallback((): string | null => {
-    return getCookie(TOKEN_COOKIE_NAME);
-  }, []);
+  
+  // Get state from Zustand store
+  const { 
+    token, 
+    isLoading,
+    isAuthenticated,
+    setAuth, 
+    setUser, 
+    clearAuth,
+  } = useAuthStore();
 
   // Use TanStack Query to validate token
   const { data: userResponse, isError } = useAuthMe(token);
 
-  // Derive user state from userResponse
-  const user = userResponse?.data || null;
-
   // Synchronize token state with API response (401 = invalid token)
-  // This is a legitimate case for setState in effect as we're syncing with external system (API)
   useEffect(() => {
     if (token && userResponse?.status === 401) {
-      deleteCookie(TOKEN_COOKIE_NAME);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronizing with external system (API auth state)
-      setToken(null);
-      authStore.setAuth(false, false);
+      clearAuth();
     }
-  }, [token, userResponse?.status]);
+  }, [token, userResponse?.status, clearAuth]);
 
   // Synchronize auth state based on token and user response
   useEffect(() => {
     if (token && userResponse) {
       if (userResponse.data) {
-        authStore.setAuth(true, false);
+        setAuth(true, false);
+        setUser(userResponse.data);
       } else if (userResponse.error && userResponse.status !== 401) {
         // Network error or other issues - keep token and assume authenticated
-        // This prevents users from being logged out due to temporary network issues
-        authStore.setAuth(true, false);
+        setAuth(true, false);
       }
     } else if (token && isError) {
       // Error fetching user, but keep token
-      authStore.setAuth(true, false);
+      setAuth(true, false);
     } else if (!token) {
-      authStore.setAuth(false, false);
+      setAuth(false, false);
     }
-  }, [token, userResponse, isError]);
+  }, [token, userResponse, isError, setAuth, setUser]);
 
+  // Redirect to login (root) if not authenticated and not already on login page
   useEffect(() => {
-    // Redirect to login (root) if not authenticated and not already on login page
-    if (!authState.isLoading && !authState.isAuthenticated && pathname !== '/') {
+    if (!isLoading && !isAuthenticated && pathname !== '/') {
       router.push('/');
     }
-  }, [authState.isAuthenticated, authState.isLoading, pathname, router]);
+  }, [isAuthenticated, isLoading, pathname, router]);
+
+  return <>{children}</>;
+}
+
+/**
+ * Hook to access auth state and actions
+ * Now uses Zustand store with additional login/logout methods
+ */
+export function useAuth() {
+  const router = useRouter();
+  const store = useAuthStore();
+  const loginMutation = useAuthLogin();
+  const logoutMutation = useAuthLogout();
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Use TanStack Query mutation for login
       const result = await loginMutation.mutateAsync({ email, password });
 
       if (result.error) {
@@ -160,11 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (result.data?.access_token) {
         const accessToken = result.data.access_token;
         
-        // Store the token in cookie
-        setCookie(TOKEN_COOKIE_NAME, accessToken);
-        setToken(accessToken);
+        // Store the token in cookie and state
+        store.setToken(accessToken);
+        store.setAuth(true);
 
-        authStore.setAuth(true);
         router.push('/summary');
         return { success: true };
       }
@@ -173,10 +94,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       return { success: false, error: 'Unable to connect to server. Please check your connection and try again.' };
     }
-  }, [router, loginMutation]);
+  }, [router, loginMutation, store]);
 
   const logout = useCallback(async () => {
-    const currentToken = getToken();
+    const currentToken = store.getToken();
     
     // Use TanStack Query mutation for logout
     if (currentToken) {
@@ -188,31 +109,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Clear local state
-    deleteCookie(TOKEN_COOKIE_NAME);
-    setToken(null);
-    authStore.setAuth(false);
+    store.clearAuth();
     router.push('/');
-  }, [router, getToken, logoutMutation]);
+  }, [router, store, logoutMutation]);
 
-  return (
-    <AuthContext.Provider value={{ 
-      isAuthenticated: authState.isAuthenticated, 
-      isLoading: authState.isLoading, 
-      user,
-      token,
-      login, 
-      logout,
-      getToken
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return {
+    isAuthenticated: store.isAuthenticated,
+    isLoading: store.isLoading,
+    user: store.user,
+    token: store.token,
+    login,
+    logout,
+    getToken: store.getToken,
+  };
 }
