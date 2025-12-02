@@ -112,18 +112,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Derive user state from userResponse
   const user = userResponse?.data || null;
 
+  // Handle token invalidation when we receive 401
+  useEffect(() => {
+    if (token && userResponse?.status === 401) {
+      // Token is invalid - clear it asynchronously
+      deleteCookie(TOKEN_COOKIE_NAME);
+      // Use timeout to avoid synchronous setState in effect
+      setTimeout(() => setToken(null), 0);
+      authStore.setAuth(false, false);
+    }
+  }, [token, userResponse?.status]);
+
   // Synchronize auth state based on token and user response
   useEffect(() => {
     if (token && userResponse) {
       if (userResponse.data) {
         authStore.setAuth(true, false);
-      } else if (userResponse.status === 401) {
-        // Token is invalid (unauthorized), clear it
-        deleteCookie(TOKEN_COOKIE_NAME);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setToken(null);
-        authStore.setAuth(false, false);
-      } else if (userResponse.error) {
+      } else if (userResponse.error && userResponse.status !== 401) {
         // Network error or other issues - keep token and assume authenticated
         // This prevents users from being logged out due to temporary network issues
         authStore.setAuth(true, false);
