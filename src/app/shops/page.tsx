@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getShops } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShopResponse } from '@/lib/type';
 import Pagination from '@/components/Pagination';
+import Table, { Column } from '@/components/Table';
 
 export default function ShopsPage() {
   const [shops, setShops] = useState<ShopResponse[]>([]);
@@ -75,6 +76,36 @@ export default function ShopsPage() {
 
   const currentPage = Math.floor(offset / limit) + 1;
 
+  const columns: Column<ShopResponse>[] = useMemo(
+    () => [
+      {
+        key: 'id',
+        header: 'ID',
+        render: (shop) => <span className="whitespace-nowrap">{shop.id}</span>,
+      },
+      {
+        key: 'name',
+        header: 'Name',
+        render: (shop) => <span className="whitespace-nowrap">{shop.name}</span>,
+      },
+      {
+        key: 'description',
+        header: 'Description',
+        render: (shop) => shop.description || '-',
+      },
+      {
+        key: 'created_at',
+        header: 'Created At',
+        render: (shop) => (
+          <span className="whitespace-nowrap">
+            {new Date(shop.created_at).toLocaleDateString()}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
+
   return (
     <div className="py-4 md:py-8">
       <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shops</h1>
@@ -89,58 +120,13 @@ export default function ShopsPage() {
       )}
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID
-                </th>
-                <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
-                </th>
-                <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created At
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan={4} className="px-3 md:px-6 py-4 text-center text-gray-500 text-sm">
-                    Loading...
-                  </td>
-                </tr>
-              ) : shops.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-3 md:px-6 py-4 text-center text-gray-500 text-sm">
-                    No shops available.
-                  </td>
-                </tr>
-              ) : (
-                shops.map((shop) => (
-                  <tr key={shop.id}>
-                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {shop.id}
-                    </td>
-                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {shop.name}
-                    </td>
-                    <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
-                      {shop.description || '-'}
-                    </td>
-                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(shop.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          columns={columns}
+          data={shops}
+          loading={loading}
+          emptyMessage="No shops available."
+          getRowKey={(shop) => shop.id}
+        />
 
         {/* Pagination Controls */}
         <Pagination
