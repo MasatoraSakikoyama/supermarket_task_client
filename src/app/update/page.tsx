@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { put } from '@/lib/api';
+import { usePut } from '@/lib/hooks';
 
 interface FormData {
   id: string;
@@ -21,8 +21,10 @@ export default function UpdatePage() {
     quantity: '',
     price: '',
   });
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Use TanStack Query mutation hook
+  const putMutation = usePut<UpdateResponse>();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -31,23 +33,27 @@ export default function UpdatePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setMessage(null);
 
-    // Example API call - replace with your actual API endpoint
-    const response = await put<UpdateResponse>(`/api/items/${formData.id}`, {
-      name: formData.name,
-      quantity: parseInt(formData.quantity, 10),
-      price: parseFloat(formData.price),
-    });
+    try {
+      // Example API call - replace with your actual API endpoint
+      const result = await putMutation.mutateAsync({
+        url: `/api/items/${formData.id}`,
+        body: {
+          name: formData.name,
+          quantity: parseInt(formData.quantity, 10),
+          price: parseFloat(formData.price),
+        },
+      });
 
-    if (response.error) {
-      setMessage({ type: 'error', text: response.error });
-    } else {
-      setMessage({ type: 'success', text: 'Item updated successfully!' });
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error });
+      } else {
+        setMessage({ type: 'success', text: 'Item updated successfully!' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to update item' });
     }
-
-    setLoading(false);
   };
 
   return (
@@ -139,10 +145,10 @@ export default function UpdatePage() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={putMutation.isPending}
           className="w-full px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
         >
-          {loading ? 'Updating...' : 'Update Item'}
+          {putMutation.isPending ? 'Updating...' : 'Update Item'}
         </button>
       </form>
     </div>

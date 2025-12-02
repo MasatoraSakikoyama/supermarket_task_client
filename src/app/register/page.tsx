@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { post } from '@/lib/api';
+import { usePost } from '@/lib/hooks';
 
 interface FormData {
   name: string;
@@ -20,8 +20,10 @@ export default function RegisterPage() {
     quantity: '',
     price: '',
   });
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Use TanStack Query mutation hook
+  const postMutation = usePost<RegisterResponse>();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -30,24 +32,28 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setMessage(null);
 
-    // Example API call - replace with your actual API endpoint
-    const response = await post<RegisterResponse>('/api/register', {
-      name: formData.name,
-      quantity: parseInt(formData.quantity, 10),
-      price: parseFloat(formData.price),
-    });
+    try {
+      // Example API call - replace with your actual API endpoint
+      const result = await postMutation.mutateAsync({
+        url: '/api/register',
+        body: {
+          name: formData.name,
+          quantity: parseInt(formData.quantity, 10),
+          price: parseFloat(formData.price),
+        },
+      });
 
-    if (response.error) {
-      setMessage({ type: 'error', text: response.error });
-    } else {
-      setMessage({ type: 'success', text: 'Item registered successfully!' });
-      setFormData({ name: '', quantity: '', price: '' });
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error });
+      } else {
+        setMessage({ type: 'success', text: 'Item registered successfully!' });
+        setFormData({ name: '', quantity: '', price: '' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to register item' });
     }
-
-    setLoading(false);
   };
 
   return (
@@ -123,10 +129,10 @@ export default function RegisterPage() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={postMutation.isPending}
           className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
         >
-          {loading ? 'Registering...' : 'Register Item'}
+          {postMutation.isPending ? 'Registering...' : 'Register Item'}
         </button>
       </form>
     </div>

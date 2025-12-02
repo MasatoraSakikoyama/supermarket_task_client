@@ -274,3 +274,72 @@ export function useDeleteShopSettlement() {
     },
   });
 }
+
+// =============================================================================
+// Generic Hooks for Custom API Endpoints
+// =============================================================================
+
+/**
+ * Generic hook for GET requests
+ */
+export function useGet<T>(url: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['get', url],
+    queryFn: async () => {
+      const { get } = await import('./api');
+      return get<T>(url);
+    },
+    enabled,
+  });
+}
+
+/**
+ * Generic hook for POST requests (mutations)
+ */
+export function usePost<T>() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ url, body, headers }: { url: string; body: unknown; headers?: Record<string, string> }) => {
+      const { post } = await import('./api');
+      return post<T>(url, body, headers);
+    },
+    onSuccess: () => {
+      // Invalidate all queries on successful post
+      queryClient.invalidateQueries();
+    },
+  });
+}
+
+/**
+ * Generic hook for PUT requests (mutations)
+ */
+export function usePut<T>() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ url, body, headers }: { url: string; body: unknown; headers?: Record<string, string> }) => {
+      const { put } = await import('./api');
+      return put<T>(url, body, headers);
+    },
+    onSuccess: () => {
+      // Invalidate all queries on successful put
+      queryClient.invalidateQueries();
+    },
+  });
+}
+
+/**
+ * Generic hook for DELETE requests (mutations)
+ */
+export function useDelete<T>() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ url, headers }: { url: string; headers?: Record<string, string> }) => {
+      const { del } = await import('./api');
+      return del<T>(url, headers);
+    },
+    onSuccess: () => {
+      // Invalidate all queries on successful delete
+      queryClient.invalidateQueries();
+    },
+  });
+}

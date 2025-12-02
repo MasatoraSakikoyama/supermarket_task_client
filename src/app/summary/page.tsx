@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { get } from '@/lib/api';
+import { useState, useMemo } from 'react';
+import { useGet } from '@/lib/hooks';
 import Table, { Column } from '@/components/Table';
 import Pagination from '@/components/Pagination';
 
@@ -13,33 +13,21 @@ interface SummaryData {
 }
 
 export default function SummaryPage() {
-  const [allData, setAllData] = useState<SummaryData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [shouldFetch, setShouldFetch] = useState(false);
   const [offset, setOffset] = useState(0);
   const [limit] = useState(10);
 
-  const fetchSummary = async () => {
-    setLoading(true);
-    setError(null);
-    setOffset(0); // Reset to first page when fetching new data
-    
-    // Example API call - replace with your actual API endpoint
-    const response = await get<SummaryData[]>('/api/summary');
-    
-    if (response.error) {
-      setError(response.error);
-    } else if (response.data) {
-      setAllData(response.data);
-    }
-    
-    setLoading(false);
-  };
+  // Use TanStack Query hook for fetching data
+  const { data: response, isLoading, refetch } = useGet<SummaryData[]>('/api/summary', shouldFetch);
 
-  useEffect(() => {
-    // Uncomment to fetch data on page load
-    // fetchSummary();
-  }, []);
+  // Memoize allData to prevent unnecessary recalculations
+  const allData = useMemo(() => response?.data || [], [response?.data]);
+
+  const fetchSummary = () => {
+    setShouldFetch(true);
+    setOffset(0); // Reset to first page when fetching new data
+    refetch();
+  };
 
   const handlePrevPage = () => {
     if (offset >= limit) {
@@ -98,16 +86,16 @@ export default function SummaryPage() {
       <div className="mb-4 md:mb-6">
         <button
           onClick={fetchSummary}
-          disabled={loading}
+          disabled={isLoading}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base w-full sm:w-auto"
         >
-          {loading ? 'Loading...' : 'Fetch Summary Data'}
+          {isLoading ? 'Loading...' : 'Fetch Summary Data'}
         </button>
       </div>
 
-      {error && (
+      {response?.error && (
         <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-          Error: {error}
+          Error: {response.error}
         </div>
       )}
 
@@ -115,7 +103,7 @@ export default function SummaryPage() {
         <Table
           columns={columns}
           data={paginatedData}
-          loading={loading}
+          loading={isLoading}
           emptyMessage='No data available. Click "Fetch Summary Data" to load data from the API.'
           getRowKey={(item) => String(item.id)}
         />
@@ -124,7 +112,7 @@ export default function SummaryPage() {
         <Pagination
           currentPage={currentPage}
           hasMore={hasMore}
-          loading={loading}
+          loading={isLoading}
           onPrevious={handlePrevPage}
           onNext={handleNextPage}
         />

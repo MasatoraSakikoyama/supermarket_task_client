@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { del } from '@/lib/api';
+import { useDelete } from '@/lib/hooks';
 
 interface DeleteResponse {
   message: string;
@@ -9,25 +9,30 @@ interface DeleteResponse {
 
 export default function DeletePage() {
   const [itemId, setItemId] = useState('');
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Use TanStack Query mutation hook
+  const deleteMutation = useDelete<DeleteResponse>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setMessage(null);
 
-    // Example API call - replace with your actual API endpoint
-    const response = await del<DeleteResponse>(`/api/items/${itemId}`);
+    try {
+      // Example API call - replace with your actual API endpoint
+      const result = await deleteMutation.mutateAsync({
+        url: `/api/items/${itemId}`,
+      });
 
-    if (response.error) {
-      setMessage({ type: 'error', text: response.error });
-    } else {
-      setMessage({ type: 'success', text: 'Item deleted successfully!' });
-      setItemId('');
+      if (result.error) {
+        setMessage({ type: 'error', text: result.error });
+      } else {
+        setMessage({ type: 'success', text: 'Item deleted successfully!' });
+        setItemId('');
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to delete item' });
     }
-
-    setLoading(false);
   };
 
   return (
@@ -67,10 +72,10 @@ export default function DeletePage() {
 
         <button
           type="submit"
-          disabled={loading || !itemId}
+          disabled={deleteMutation.isPending || !itemId}
           className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
         >
-          {loading ? 'Deleting...' : 'Delete Item'}
+          {deleteMutation.isPending ? 'Deleting...' : 'Delete Item'}
         </button>
 
         <p className="mt-4 text-sm text-gray-500 text-center">
