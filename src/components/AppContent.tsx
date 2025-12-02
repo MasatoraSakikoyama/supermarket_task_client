@@ -60,12 +60,12 @@ function AppLayout({ children }: { children: React.ReactNode }) {
                 />
               </svg>
             </button>
-            <div className="flex-1"></div>
             {user && (
               <div className="text-sm text-gray-600">
-                Welcome {user.username}
+                Welcome {user.name}
               </div>
             )}
+            <div className="flex-1"></div>
             <button
               onClick={logout}
               className="px-3 py-2 bg-red-600 rounded-md text-white hover:bg-red-700 transition-colors"

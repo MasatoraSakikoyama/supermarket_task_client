@@ -22,13 +22,13 @@ export interface ApiRequestOptions {
 // Auth Types
 // =============================================================================
 
-export interface AccountCreate {
+export interface UserCreate {
   username: string;
   email: string;
   password: string;
 }
 
-export interface AccountResponse {
+export interface UserResponse {
   id: number;
   username: string;
   email: string;
@@ -69,20 +69,20 @@ export interface ShopResponse {
 }
 
 // =============================================================================
-// Shop Settlement Types
+// Shop Account Entry Types
 // =============================================================================
 
-export interface ShopSettlementCreate {
+export interface ShopAccountEntryCreate {
   name: string;
   description?: string;
 }
 
-export interface ShopSettlementUpdate {
+export interface ShopAccountEntryUpdate {
   name?: string;
   description?: string;
 }
 
-export interface ShopSettlementResponse {
+export interface ShopAccountEntryResponse {
   id: number;
   shop_id: number;
   name: string;

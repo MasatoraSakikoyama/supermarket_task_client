@@ -3,21 +3,21 @@
  */
 
 import { AxiosError, AxiosRequestConfig } from 'axios';
-import axiosInstance from './axios';
+import axiosInstance from '@/lib/axios';
 import {
   ApiResponse,
   ApiRequestOptions,
-  AccountCreate,
-  AccountResponse,
+  UserCreate,
+  UserResponse,
   LoginRequest,
   TokenResponse,
   ShopCreate,
   ShopUpdate,
   ShopResponse,
-  ShopSettlementCreate,
-  ShopSettlementUpdate,
-  ShopSettlementResponse,
-} from './type';
+  ShopAccountEntryCreate,
+  ShopAccountEntryUpdate,
+  ShopAccountEntryResponse,
+} from '@/type/api';
 
 /**
  * Base API client for making HTTP requests using axios
@@ -113,8 +113,8 @@ export async function patch<T>(
 /**
  * Register a new user account
  */
-export async function authRegister(data: AccountCreate): Promise<ApiResponse<AccountResponse>> {
-  return post<AccountResponse>('/auth/register', data);
+export async function authRegister(data: UserCreate): Promise<ApiResponse<UserResponse>> {
+  return post<UserResponse>('/auth/register', data);
 }
 
 /**
@@ -136,8 +136,8 @@ export async function authLogout(token: string): Promise<ApiResponse<null>> {
 /**
  * Get current user information
  */
-export async function authMe(token: string): Promise<ApiResponse<AccountResponse>> {
-  return get<AccountResponse>('/auth/me', {
+export async function authMe(token: string): Promise<ApiResponse<UserResponse>> {
+  return get<UserResponse>('/auth/me', {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -155,7 +155,7 @@ export async function getShops(
   limit: number = 100
 ): Promise<ApiResponse<ShopResponse[]>> {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
-  return get<ShopResponse[]>(`/shops?${params}`, {
+  return get<ShopResponse[]>(`/shop?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -164,7 +164,7 @@ export async function getShops(
  * Get a single shop by ID
  */
 export async function getShop(token: string, shopId: number): Promise<ApiResponse<ShopResponse>> {
-  return get<ShopResponse>(`/shops/${shopId}`, {
+  return get<ShopResponse>(`/shop/${shopId}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -173,7 +173,7 @@ export async function getShop(token: string, shopId: number): Promise<ApiRespons
  * Create a new shop
  */
 export async function createShop(token: string, data: ShopCreate): Promise<ApiResponse<ShopResponse>> {
-  return post<ShopResponse>('/shops', data, {
+  return post<ShopResponse>('/shop', data, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -186,7 +186,7 @@ export async function updateShop(
   shopId: number,
   data: ShopUpdate
 ): Promise<ApiResponse<ShopResponse>> {
-  return put<ShopResponse>(`/shops/${shopId}`, data, {
+  return put<ShopResponse>(`/shop/${shopId}`, data, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -195,79 +195,79 @@ export async function updateShop(
  * Delete a shop
  */
 export async function deleteShop(token: string, shopId: number): Promise<ApiResponse<null>> {
-  return del<null>(`/shops/${shopId}`, {
+  return del<null>(`/shop/${shopId}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
 
 // =============================================================================
-// Shop Settlements API
+// Shop Account Data API
 // =============================================================================
 
 /**
- * Get all settlements for a shop with pagination
+ * Get all Account Data for a shop with pagination
  */
-export async function getShopSettlements(
+export async function getShopAccountEntryList(
   token: string,
   shopId: number,
   offset: number = 0,
   limit: number = 100
-): Promise<ApiResponse<ShopSettlementResponse[]>> {
+): Promise<ApiResponse<ShopAccountEntryListResponse[]>> {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
-  return get<ShopSettlementResponse[]>(`/shops/${shopId}/settlements?${params}`, {
+  return get<ShopAccountEntryListResponse[]>(`/shop/${shopId}/account_data?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
 
 /**
- * Get a single settlement by ID for a shop
+ * Get a single Account Data by ID for a shop
  */
-export async function getShopSettlement(
+export async function getShopAccountEntry(
   token: string,
   shopId: number,
-  settlementId: number
-): Promise<ApiResponse<ShopSettlementResponse>> {
-  return get<ShopSettlementResponse>(`/shops/${shopId}/settlements/${settlementId}`, {
+  accountDataId: number
+): Promise<ApiResponse<ShopAccountEntryResponse>> {
+  return get<ShopAccountEntryResponse>(`/shop/${shopId}/account_data/${accountDataId}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
 
 /**
- * Create a new settlement for a shop
+ * Create a new Account Data for a shop
  */
-export async function createShopSettlement(
+export async function createShopAccountEntry(
   token: string,
   shopId: number,
-  data: ShopSettlementCreate
-): Promise<ApiResponse<ShopSettlementResponse>> {
-  return post<ShopSettlementResponse>(`/shops/${shopId}/settlements`, data, {
+  data: ShopAccountEntryCreate
+): Promise<ApiResponse<ShopAccountEntryResponse>> {
+  return post<ShopAccountEntryResponse>(`/shop/${shopId}/account_data`, data, {
     'Authorization': `Bearer ${token}`,
   });
 }
 
 /**
- * Update an existing settlement for a shop
+ * Update an existing Account Data for a shop
  */
-export async function updateShopSettlement(
+export async function updateShopAccountEntry(
   token: string,
   shopId: number,
-  settlementId: number,
-  data: ShopSettlementUpdate
-): Promise<ApiResponse<ShopSettlementResponse>> {
-  return put<ShopSettlementResponse>(`/shops/${shopId}/settlements/${settlementId}`, data, {
+  accountDataId: number,
+  data: ShopAccountEntryUpdate
+): Promise<ApiResponse<ShopAccountEntryResponse>> {
+  return put<ShopAccountEntryResponse>(`/shop/${shopId}/account_data/${accountDataId}`, data, {
     'Authorization': `Bearer ${token}`,
   });
 }
 
 /**
- * Delete a settlement for a shop
+ * Delete a Account Data for a shop
  */
-export async function deleteShopSettlement(
+export async function deleteShopAccountEntry(
   token: string,
   shopId: number,
-  settlementId: number
+  accountDataId: number
 ): Promise<ApiResponse<null>> {
-  return del<null>(`/shops/${shopId}/settlements/${settlementId}`, {
+  return del<null>(`/shop/${shopId}/account_data/${accountDataId}`, {
     'Authorization': `Bearer ${token}`,
   });
 }

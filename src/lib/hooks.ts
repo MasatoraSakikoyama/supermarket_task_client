@@ -13,24 +13,24 @@ import {
   createShop,
   updateShop,
   deleteShop,
-  getShopSettlements,
-  getShopSettlement,
-  createShopSettlement,
-  updateShopSettlement,
-  deleteShopSettlement,
+  getShopAccountEntryList,
+  getShopAccountEntry,
+  createShopAccountEntry,
+  updateShopAccountEntry,
+  deleteShopAccountEntry,
   get,
   post,
   put,
   del,
-} from './api';
+} from '@/lib/api';
 import {
-  AccountCreate,
+  UserCreate,
   LoginRequest,
   ShopCreate,
   ShopUpdate,
-  ShopSettlementCreate,
-  ShopSettlementUpdate,
-} from './type';
+  ShopAccountEntryCreate,
+  ShopAccountEntryUpdate,
+} from '@/type/api';
 
 // =============================================================================
 // Authentication Hooks
@@ -41,7 +41,7 @@ import {
  */
 export function useAuthRegister() {
   return useMutation({
-    mutationFn: (data: AccountCreate) => authRegister(data),
+    mutationFn: (data: UserCreate) => authRegister(data),
   });
 }
 
@@ -71,7 +71,7 @@ export function useAuthLogout() {
 /**
  * Hook for getting current user information
  */
-export function useAuthMe(token: string | null, enabled: boolean = true) {
+export function useAuthMe(token: string | null) {
   return useQuery({
     queryKey: ['auth', 'me', token],
     queryFn: () => {
@@ -80,7 +80,7 @@ export function useAuthMe(token: string | null, enabled: boolean = true) {
       }
       return authMe(token);
     },
-    enabled: enabled && !!token,
+    enabled: !!token,
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -100,7 +100,7 @@ export function useShops(
   enabled: boolean = true
 ) {
   return useQuery({
-    queryKey: ['shops', token, offset, limit],
+    queryKey: ['shop', offset, limit],
     queryFn: () => {
       if (!token) {
         throw new Error('No token provided');
@@ -116,7 +116,7 @@ export function useShops(
  */
 export function useShop(token: string | null, shopId: number, enabled: boolean = true) {
   return useQuery({
-    queryKey: ['shops', shopId, token],
+    queryKey: ['shop', shopId],
     queryFn: () => {
       if (!token) {
         throw new Error('No token provided');
@@ -136,7 +136,7 @@ export function useCreateShop() {
     mutationFn: ({ token, data }: { token: string; data: ShopCreate }) => createShop(token, data),
     onSuccess: () => {
       // Invalidate shops list on create
-      queryClient.invalidateQueries({ queryKey: ['shops'] });
+      queryClient.invalidateQueries({ queryKey: ['shop'] });
     },
   });
 }
@@ -151,8 +151,8 @@ export function useUpdateShop() {
       updateShop(token, shopId, data),
     onSuccess: (_, variables) => {
       // Invalidate specific shop and shops list on update
-      queryClient.invalidateQueries({ queryKey: ['shops', variables.shopId] });
-      queryClient.invalidateQueries({ queryKey: ['shops'] });
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId] });
+      queryClient.invalidateQueries({ queryKey: ['shop'] });
     },
   });
 }
@@ -166,20 +166,20 @@ export function useDeleteShop() {
     mutationFn: ({ token, shopId }: { token: string; shopId: number }) => deleteShop(token, shopId),
     onSuccess: (_, variables) => {
       // Invalidate specific shop and shops list on delete
-      queryClient.invalidateQueries({ queryKey: ['shops', variables.shopId] });
-      queryClient.invalidateQueries({ queryKey: ['shops'] });
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId] });
+      queryClient.invalidateQueries({ queryKey: ['shop'] });
     },
   });
 }
 
 // =============================================================================
-// Shop Settlements Hooks
+// Shop AccountData Hooks
 // =============================================================================
 
 /**
- * Hook for getting all settlements for a shop with pagination
+ * Hook for getting all account data for a shop with pagination
  */
-export function useShopSettlements(
+export function useShopAccountDataList(
   token: string | null,
   shopId: number,
   offset: number = 0,
@@ -187,94 +187,94 @@ export function useShopSettlements(
   enabled: boolean = true
 ) {
   return useQuery({
-    queryKey: ['shops', shopId, 'settlements', token, offset, limit],
+    queryKey: ['shop', shopId, 'account_data', offset, limit],
     queryFn: () => {
       if (!token) {
         throw new Error('No token provided');
       }
-      return getShopSettlements(token, shopId, offset, limit);
+      return getShopAccountDataLisr(token, shopId, offset, limit);
     },
     enabled: enabled && !!token && shopId > 0,
   });
 }
 
 /**
- * Hook for getting a single settlement
+ * Hook for getting a single account data by ID
  */
-export function useShopSettlement(
+export function useShopAccountData(
   token: string | null,
   shopId: number,
-  settlementId: number,
+  accountDataId: number,
   enabled: boolean = true
 ) {
   return useQuery({
-    queryKey: ['shops', shopId, 'settlements', settlementId, token],
+    queryKey: ['shop', shopId, 'account_data', accountDataId],
     queryFn: () => {
       if (!token) {
         throw new Error('No token provided');
       }
-      return getShopSettlement(token, shopId, settlementId);
+      return getShopAccountData(token, shopId, accountDataId);
     },
-    enabled: enabled && !!token && shopId > 0 && settlementId > 0,
+    enabled: enabled && !!token && shopId > 0 && accountDataId > 0,
   });
 }
 
 /**
- * Hook for creating a settlement
+ * Hook for creating a account data
  */
-export function useCreateShopSettlement() {
+export function useCreateShopAccountData() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopSettlementCreate }) =>
-      createShopSettlement(token, shopId, data),
+    mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopAccountDataCreate }) =>
+      createShopAccountData(token, shopId, data),
     onSuccess: (_, variables) => {
-      // Invalidate settlements list on create
-      queryClient.invalidateQueries({ queryKey: ['shops', variables.shopId, 'settlements'] });
+      // Invalidate account data list on create
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_data'] });
     },
   });
 }
 
 /**
- * Hook for updating a settlement
+ * Hook for updating a account data
  */
-export function useUpdateShopSettlement() {
+export function useUpdateShopAccountData() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       token,
       shopId,
-      settlementId,
+      accountDataId,
       data,
     }: {
       token: string;
       shopId: number;
-      settlementId: number;
-      data: ShopSettlementUpdate;
-    }) => updateShopSettlement(token, shopId, settlementId, data),
+      accountDataId: number;
+      data: ShopAccountDataUpdate;
+    }) => updateShopAccountData(token, shopId, accountDataId, data),
     onSuccess: (_, variables) => {
-      // Invalidate specific settlement and settlements list on update
+      // Invalidate specific account data and account data list on update
       queryClient.invalidateQueries({
-        queryKey: ['shops', variables.shopId, 'settlements', variables.settlementId],
+        queryKey: ['shop', variables.shopId, 'account_data', variables.accountDataId],
       });
-      queryClient.invalidateQueries({ queryKey: ['shops', variables.shopId, 'settlements'] });
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_data'] });
     },
   });
 }
 
 /**
- * Hook for deleting a settlement
+ * Hook for deleting a account data
  */
-export function useDeleteShopSettlement() {
+export function useDeleteShopAccountData() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ token, shopId, settlementId }: { token: string; shopId: number; settlementId: number }) =>
-      deleteShopSettlement(token, shopId, settlementId),
+    mutationFn: ({ token, shopId, accountDataId }: { token: string; shopId: number; accountDataId: number }) =>
+      deleteShopAccountData(token, shopId, accountDataId),
     onSuccess: (_, variables) => {
-      // Invalidate specific settlement and settlements list on delete
+      // Invalidate specific account dataand account data list on delete
       queryClient.invalidateQueries({
-        queryKey: ['shops', variables.shopId, 'settlements', variables.settlementId],
+        queryKey: ['shop', variables.shopId, 'account_data', variables.accountDataId],
       });
-      queryClient.invalidateQueries({ queryKey: ['shops', variables.shopId, 'settlements'] });
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_data'] });
     },
   });
 }

@@ -28,9 +28,6 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6 md:p-8">
         <h1 className="text-xl md:text-2xl font-bold text-center mb-4 md:mb-6 text-gray-800">Login</h1>
-        <p className="text-gray-600 text-center mb-4 md:mb-6 text-sm md:text-base">
-          Please enter your credentials to access the Supermarket Task Management application.
-        </p>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">

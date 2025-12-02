@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Use TanStack Query to validate token
-  const { data: userResponse, isError } = useAuthMe(token, !!token);
+  const { data: userResponse, isError } = useAuthMe(token);
 
   // Derive user state from userResponse
   const user = userResponse?.data || null;

@@ -6,6 +6,7 @@ import { ShopResponse } from '@/lib/type';
 import { useShops } from '@/lib/hooks';
 import Pagination from '@/components/Pagination';
 import Table, { Column } from '@/components/Table';
+import { AccountPeriodTypeLabels } from '@/constants';
 
 export default function ShopsPage() {
   const [offset, setOffset] = useState(0);
@@ -46,9 +47,18 @@ export default function ShopsPage() {
         render: (shop) => <span className="whitespace-nowrap">{shop.name}</span>,
       },
       {
-        key: 'description',
-        header: 'Description',
-        render: (shop) => shop.description || '-',
+        key: 'period_type',
+        header: 'Period Type',
+        render: (shop) => <span className="whitespace-nowrap">{AccountPeriodTypeLabels[shop.period_type]}</span>,
+      },
+      {
+        key: 'is_cumulative',
+        header: 'Cumulative',
+        render: (shop) => (
+          <span className="whitespace-nowrap">
+            {shop.is_cumulative ? 'Yes' : 'No'}
+          </span>
+        ),
       },
       {
         key: 'created_at',
@@ -57,6 +67,30 @@ export default function ShopsPage() {
           <span className="whitespace-nowrap">
             {new Date(shop.created_at).toLocaleDateString()}
           </span>
+        ),
+      },
+      {
+        key: '',
+        header: 'Actions',
+        render: (shop) => (
+          <div className="flex space-x-4">
+            <button
+              className="text-blue-600 hover:underline"
+              onClick={() => {
+                // Handle edit action
+              }}
+            >
+              Edit
+            </button>
+            <button
+              className="text-red-600 hover:underline"
+              onClick={() => {
+                // Handle delete action
+              }}
+            >
+              Delete
+            </button>
+          </div>
         ),
       },
     ],
