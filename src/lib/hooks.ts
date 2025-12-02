@@ -18,6 +18,10 @@ import {
   createShopSettlement,
   updateShopSettlement,
   deleteShopSettlement,
+  get,
+  post,
+  put,
+  del,
 } from './api';
 import {
   AccountCreate,
@@ -285,10 +289,7 @@ export function useDeleteShopSettlement() {
 export function useGet<T>(url: string, enabled: boolean = true) {
   return useQuery({
     queryKey: ['get', url],
-    queryFn: async () => {
-      const { get } = await import('./api');
-      return get<T>(url);
-    },
+    queryFn: () => get<T>(url),
     enabled,
   });
 }
@@ -298,10 +299,8 @@ export function useGet<T>(url: string, enabled: boolean = true) {
  */
 export function usePost<T>() {
   return useMutation({
-    mutationFn: async ({ url, body, headers }: { url: string; body: unknown; headers?: Record<string, string> }) => {
-      const { post } = await import('./api');
-      return post<T>(url, body, headers);
-    },
+    mutationFn: ({ url, body, headers }: { url: string; body: unknown; headers?: Record<string, string> }) =>
+      post<T>(url, body, headers),
   });
 }
 
@@ -310,10 +309,8 @@ export function usePost<T>() {
  */
 export function usePut<T>() {
   return useMutation({
-    mutationFn: async ({ url, body, headers }: { url: string; body: unknown; headers?: Record<string, string> }) => {
-      const { put } = await import('./api');
-      return put<T>(url, body, headers);
-    },
+    mutationFn: ({ url, body, headers }: { url: string; body: unknown; headers?: Record<string, string> }) =>
+      put<T>(url, body, headers),
   });
 }
 
@@ -322,9 +319,7 @@ export function usePut<T>() {
  */
 export function useDelete<T>() {
   return useMutation({
-    mutationFn: async ({ url, headers }: { url: string; headers?: Record<string, string> }) => {
-      const { del } = await import('./api');
-      return del<T>(url, headers);
-    },
+    mutationFn: ({ url, headers }: { url: string; headers?: Record<string, string> }) =>
+      del<T>(url, headers),
   });
 }
