@@ -13,7 +13,11 @@ interface TableProps<T> {
   loading?: boolean;
   emptyMessage?: string;
   getRowKey: (item: T) => string | number;
+  headerClassName?: string;
 }
+
+const DEFAULT_HEADER_CLASS =
+  'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
 
 export default function Table<T>({
   columns,
@@ -21,6 +25,7 @@ export default function Table<T>({
   loading = false,
   emptyMessage = 'No data available.',
   getRowKey,
+  headerClassName = DEFAULT_HEADER_CLASS,
 }: TableProps<T>) {
   return (
     <div className="overflow-x-auto">
@@ -30,10 +35,7 @@ export default function Table<T>({
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={
-                  column.className ||
-                  'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                }
+                className={column.className || headerClassName}
               >
                 {column.header}
               </th>
