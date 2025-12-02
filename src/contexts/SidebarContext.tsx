@@ -1,55 +1,21 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
+import { useSidebarStore } from '@/stores/useSidebarStore';
 
-interface SidebarContextType {
-  isOpen: boolean;
-  toggle: () => void;
-  open: () => void;
-  close: () => void;
-}
-
-const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
-
+/**
+ * SidebarProvider component - now using Zustand for state management
+ * This component is kept for backwards compatibility but doesn't need to do anything
+ * since Zustand manages the state globally
+ */
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  const [isOpen, setIsOpen] = useState(true);
-
-  // Close sidebar on mobile by default
-  useEffect(() => {
-    const handleResize = () => {
-      if (typeof window !== 'undefined') {
-        if (window.innerWidth < 768) {
-          setIsOpen(false);
-        } else {
-          setIsOpen(true);
-        }
-      }
-    };
-
-    // Set initial state
-    handleResize();
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, []);
-
-  const toggle = () => setIsOpen((prev) => !prev);
-  const open = () => setIsOpen(true);
-  const close = () => setIsOpen(false);
-
-  return (
-    <SidebarContext.Provider value={{ isOpen, toggle, open, close }}>
-      {children}
-    </SidebarContext.Provider>
-  );
+  return <>{children}</>;
 }
 
+/**
+ * Hook to access sidebar state and actions
+ * Now uses Zustand store instead of React Context
+ */
 export function useSidebar() {
-  const context = useContext(SidebarContext);
-  if (context === undefined) {
-    throw new Error('useSidebar must be used within a SidebarProvider');
-  }
-  return context;
+  return useSidebarStore();
 }
