@@ -167,10 +167,10 @@ export async function authMe(token: string): Promise<ApiResponse<AccountResponse
  */
 export async function getShops(
   token: string,
-  skip: number = 0,
+  offset: number = 0,
   limit: number = 100
 ): Promise<ApiResponse<ShopResponse[]>> {
-  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
   return get<ShopResponse[]>(`${API_BASE_URL}/shops?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
@@ -226,10 +226,10 @@ export async function deleteShop(token: string, shopId: number): Promise<ApiResp
 export async function getShopSettlements(
   token: string,
   shopId: number,
-  skip: number = 0,
+  offset: number = 0,
   limit: number = 100
 ): Promise<ApiResponse<ShopSettlementResponse[]>> {
-  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
   return get<ShopSettlementResponse[]>(`${API_BASE_URL}/shops/${shopId}/settlements?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
