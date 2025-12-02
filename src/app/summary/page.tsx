@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { get } from '@/lib/api';
+import Table, { Column } from '@/components/Table';
+import Pagination from '@/components/Pagination';
 
 interface SummaryData {
   id: number;
@@ -14,8 +16,11 @@ export default function SummaryPage() {
   const [data, setData] = useState<SummaryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [limit] = useState(10);
+  const [hasMore, setHasMore] = useState(true);
 
-  const fetchSummary = async () => {
+  const fetchSummary = async (newOffset: number) => {
     setLoading(true);
     setError(null);
     
@@ -25,7 +30,11 @@ export default function SummaryPage() {
     if (response.error) {
       setError(response.error);
     } else if (response.data) {
-      setData(response.data);
+      // Simulate pagination with mock data
+      const allData = response.data;
+      const paginatedData = allData.slice(newOffset, newOffset + limit);
+      setData(paginatedData);
+      setHasMore(newOffset + limit < allData.length);
     }
     
     setLoading(false);
@@ -33,8 +42,52 @@ export default function SummaryPage() {
 
   useEffect(() => {
     // Uncomment to fetch data on page load
-    // fetchSummary();
-  }, []);
+    // fetchSummary(offset);
+  }, [offset]);
+
+  const handlePrevPage = () => {
+    if (offset >= limit) {
+      const newOffset = offset - limit;
+      setOffset(newOffset);
+      fetchSummary(newOffset);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (hasMore) {
+      const newOffset = offset + limit;
+      setOffset(newOffset);
+      fetchSummary(newOffset);
+    }
+  };
+
+  const currentPage = Math.floor(offset / limit) + 1;
+
+  const columns: Column<SummaryData>[] = useMemo(
+    () => [
+      {
+        key: 'id',
+        header: 'ID',
+        render: (item) => <span className="whitespace-nowrap">{item.id}</span>,
+      },
+      {
+        key: 'name',
+        header: 'Name',
+        render: (item) => <span className="whitespace-nowrap">{item.name}</span>,
+      },
+      {
+        key: 'quantity',
+        header: 'Quantity',
+        render: (item) => <span className="whitespace-nowrap">{item.quantity}</span>,
+      },
+      {
+        key: 'price',
+        header: 'Price',
+        render: (item) => <span className="whitespace-nowrap">${item.price.toFixed(2)}</span>,
+      },
+    ],
+    []
+  );
 
   return (
     <div className="py-4 md:py-8">
@@ -45,7 +98,7 @@ export default function SummaryPage() {
 
       <div className="mb-4 md:mb-6">
         <button
-          onClick={fetchSummary}
+          onClick={() => fetchSummary(offset)}
           disabled={loading}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base w-full sm:w-auto"
         >
@@ -60,52 +113,22 @@ export default function SummaryPage() {
       )}
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID
-                </th>
-                <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Quantity
-                </th>
-                <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {data.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-3 md:px-6 py-4 text-center text-gray-500 text-sm">
-                    No data available. Click &quot;Fetch Summary Data&quot; to load data from the API.
-                  </td>
-                </tr>
-              ) : (
-                data.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.id}
-                    </td>
-                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.name}
-                    </td>
-                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.quantity}
-                    </td>
-                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${item.price.toFixed(2)}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          columns={columns}
+          data={data}
+          loading={loading}
+          emptyMessage='No data available. Click "Fetch Summary Data" to load data from the API.'
+          getRowKey={(item) => String(item.id)}
+        />
+
+        {/* Pagination Controls */}
+        <Pagination
+          currentPage={currentPage}
+          hasMore={hasMore}
+          loading={loading}
+          onPrevious={handlePrevPage}
+          onNext={handleNextPage}
+        />
       </div>
     </div>
   );

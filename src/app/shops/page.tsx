@@ -109,9 +109,6 @@ export default function ShopsPage() {
   return (
     <div className="py-4 md:py-8">
       <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shops</h1>
-      <p className="text-gray-600 mb-4 md:mb-6 text-sm md:text-base">
-        View and manage shops with pagination.
-      </p>
 
       {error && (
         <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
