@@ -2,6 +2,8 @@
  * Web API utility functions for making HTTP requests
  */
 
+import { AxiosError, AxiosRequestConfig } from 'axios';
+import axiosInstance from './axios';
 import {
   ApiResponse,
   ApiRequestOptions,
@@ -17,15 +19,8 @@ import {
   ShopSettlementResponse,
 } from './type';
 
-// Base API URL - should be configured via environment variable
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-const DEFAULT_HEADERS = {
-  'Content-Type': 'application/json',
-};
-
 /**
- * Base API client for making HTTP requests
+ * Base API client for making HTTP requests using axios
  */
 export async function apiRequest<T>(
   url: string,
@@ -34,39 +29,28 @@ export async function apiRequest<T>(
   const { method = 'GET', headers = {}, body } = options;
 
   try {
-    const response = await fetch(url, {
+    const config: AxiosRequestConfig = {
+      url,
       method,
-      headers: {
-        ...DEFAULT_HEADERS,
-        ...headers,
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    });
+      headers,
+      data: body,
+    };
 
-    // Handle empty responses (e.g., DELETE requests, 204 No Content)
-    let data = null;
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const text = await response.text();
-      if (text) {
-        data = JSON.parse(text);
-      }
-    }
-
-    if (!response.ok) {
-      return {
-        data: null,
-        error: (data && data.message) || `HTTP error! status: ${response.status}`,
-        status: response.status,
-      };
-    }
+    const response = await axiosInstance.request<T>(config);
 
     return {
-      data,
+      data: response.data,
       error: null,
       status: response.status,
     };
   } catch (error) {
+    if (error instanceof AxiosError) {
+      return {
+        data: null,
+        error: error.response?.data?.message || error.message || 'Request failed',
+        status: error.response?.status || 0,
+      };
+    }
     return {
       data: null,
       error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -130,21 +114,21 @@ export async function patch<T>(
  * Register a new user account
  */
 export async function authRegister(data: AccountCreate): Promise<ApiResponse<AccountResponse>> {
-  return post<AccountResponse>(`${API_BASE_URL}/auth/register`, data);
+  return post<AccountResponse>('/auth/register', data);
 }
 
 /**
  * Login and get access token
  */
 export async function authLogin(data: LoginRequest): Promise<ApiResponse<TokenResponse>> {
-  return post<TokenResponse>(`${API_BASE_URL}/auth/login`, data);
+  return post<TokenResponse>('/auth/login', data);
 }
 
 /**
  * Logout and invalidate token
  */
 export async function authLogout(token: string): Promise<ApiResponse<null>> {
-  return post<null>(`${API_BASE_URL}/auth/logout`, {}, {
+  return post<null>('/auth/logout', {}, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -153,7 +137,7 @@ export async function authLogout(token: string): Promise<ApiResponse<null>> {
  * Get current user information
  */
 export async function authMe(token: string): Promise<ApiResponse<AccountResponse>> {
-  return get<AccountResponse>(`${API_BASE_URL}/auth/me`, {
+  return get<AccountResponse>('/auth/me', {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -171,7 +155,7 @@ export async function getShops(
   limit: number = 100
 ): Promise<ApiResponse<ShopResponse[]>> {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
-  return get<ShopResponse[]>(`${API_BASE_URL}/shops?${params}`, {
+  return get<ShopResponse[]>(`/shops?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -180,7 +164,7 @@ export async function getShops(
  * Get a single shop by ID
  */
 export async function getShop(token: string, shopId: number): Promise<ApiResponse<ShopResponse>> {
-  return get<ShopResponse>(`${API_BASE_URL}/shops/${shopId}`, {
+  return get<ShopResponse>(`/shops/${shopId}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -189,7 +173,7 @@ export async function getShop(token: string, shopId: number): Promise<ApiRespons
  * Create a new shop
  */
 export async function createShop(token: string, data: ShopCreate): Promise<ApiResponse<ShopResponse>> {
-  return post<ShopResponse>(`${API_BASE_URL}/shops`, data, {
+  return post<ShopResponse>('/shops', data, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -202,7 +186,7 @@ export async function updateShop(
   shopId: number,
   data: ShopUpdate
 ): Promise<ApiResponse<ShopResponse>> {
-  return put<ShopResponse>(`${API_BASE_URL}/shops/${shopId}`, data, {
+  return put<ShopResponse>(`/shops/${shopId}`, data, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -211,7 +195,7 @@ export async function updateShop(
  * Delete a shop
  */
 export async function deleteShop(token: string, shopId: number): Promise<ApiResponse<null>> {
-  return del<null>(`${API_BASE_URL}/shops/${shopId}`, {
+  return del<null>(`/shops/${shopId}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -230,7 +214,7 @@ export async function getShopSettlements(
   limit: number = 100
 ): Promise<ApiResponse<ShopSettlementResponse[]>> {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
-  return get<ShopSettlementResponse[]>(`${API_BASE_URL}/shops/${shopId}/settlements?${params}`, {
+  return get<ShopSettlementResponse[]>(`/shops/${shopId}/settlements?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -243,7 +227,7 @@ export async function getShopSettlement(
   shopId: number,
   settlementId: number
 ): Promise<ApiResponse<ShopSettlementResponse>> {
-  return get<ShopSettlementResponse>(`${API_BASE_URL}/shops/${shopId}/settlements/${settlementId}`, {
+  return get<ShopSettlementResponse>(`/shops/${shopId}/settlements/${settlementId}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -256,7 +240,7 @@ export async function createShopSettlement(
   shopId: number,
   data: ShopSettlementCreate
 ): Promise<ApiResponse<ShopSettlementResponse>> {
-  return post<ShopSettlementResponse>(`${API_BASE_URL}/shops/${shopId}/settlements`, data, {
+  return post<ShopSettlementResponse>(`/shops/${shopId}/settlements`, data, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -270,7 +254,7 @@ export async function updateShopSettlement(
   settlementId: number,
   data: ShopSettlementUpdate
 ): Promise<ApiResponse<ShopSettlementResponse>> {
-  return put<ShopSettlementResponse>(`${API_BASE_URL}/shops/${shopId}/settlements/${settlementId}`, data, {
+  return put<ShopSettlementResponse>(`/shops/${shopId}/settlements/${settlementId}`, data, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -283,7 +267,7 @@ export async function deleteShopSettlement(
   shopId: number,
   settlementId: number
 ): Promise<ApiResponse<null>> {
-  return del<null>(`${API_BASE_URL}/shops/${shopId}/settlements/${settlementId}`, {
+  return del<null>(`/shops/${shopId}/settlements/${settlementId}`, {
     'Authorization': `Bearer ${token}`,
   });
 }

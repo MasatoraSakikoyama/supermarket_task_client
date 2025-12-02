@@ -1,66 +1,23 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { getShops } from '@/lib/api';
+import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShopResponse } from '@/lib/type';
+import { useShops } from '@/lib/hooks';
 import Pagination from '@/components/Pagination';
 import Table, { Column } from '@/components/Table';
 
 export default function ShopsPage() {
-  const [shops, setShops] = useState<ShopResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
   const [limit] = useState(10);
-  const [hasMore, setHasMore] = useState(true);
   const { getToken } = useAuth();
+  const token = getToken();
 
-  useEffect(() => {
-    let cancelled = false;
+  // Use TanStack Query hook for fetching shops
+  const { data: response, isLoading, error } = useShops(token, offset, limit, !!token);
 
-    const fetchShops = async () => {
-      setLoading(true);
-      setError(null);
-      
-      const token = getToken();
-      if (!token) {
-        if (!cancelled) {
-          setError('Not authenticated');
-          setLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const response = await getShops(token, offset, limit);
-        
-        if (cancelled) return;
-
-        if (response.error) {
-          setError(response.error);
-        } else if (response.data) {
-          setShops(response.data);
-          // If we received fewer items than the limit, there are no more pages
-          setHasMore(response.data.length >= limit);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to fetch shops');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchShops();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [offset, limit, getToken]);
+  const shops = response?.data || [];
+  const hasMore = shops.length >= limit;
 
   const handlePrevPage = () => {
     if (offset >= limit) {
@@ -112,7 +69,7 @@ export default function ShopsPage() {
 
       {error && (
         <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-          Error: {error}
+          Error: {response?.error || 'Failed to fetch shops'}
         </div>
       )}
 
@@ -120,7 +77,7 @@ export default function ShopsPage() {
         <Table
           columns={columns}
           data={shops}
-          loading={loading}
+          loading={isLoading}
           emptyMessage="No shops available."
           getRowKey={(shop) => String(shop.id)}
         />
@@ -129,7 +86,7 @@ export default function ShopsPage() {
         <Pagination
           currentPage={currentPage}
           hasMore={hasMore}
-          loading={loading}
+          loading={isLoading}
           onPrevious={handlePrevPage}
           onNext={handleNextPage}
         />

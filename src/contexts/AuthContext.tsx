@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, ReactNode, useCallback, useSyncExternalStore, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { authLogin, authLogout, authMe } from '@/lib/api';
+import { useAuthLogin, useAuthLogout, useAuthMe } from '@/lib/hooks';
 import { AccountResponse } from '@/lib/type';
 
 interface AuthContextType {
@@ -87,45 +87,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authStore.getSnapshot,
     authStore.getServerSnapshot
   );
-  const [user, setUser] = useState<AccountResponse | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(() => {
+    // Initialize token from cookie on first render
+    if (typeof document !== 'undefined') {
+      return getCookie(TOKEN_COOKIE_NAME);
+    }
+    return null;
+  });
   const router = useRouter();
   const pathname = usePathname();
+
+  // TanStack Query hooks
+  const loginMutation = useAuthLogin();
+  const logoutMutation = useAuthLogout();
 
   // Get token from cookie
   const getToken = useCallback((): string | null => {
     return getCookie(TOKEN_COOKIE_NAME);
   }, []);
 
-  // Validate token and fetch user info on mount
-  useEffect(() => {
-    const validateToken = async () => {
-      const storedToken = getToken();
-      if (storedToken) {
-        setToken(storedToken);
-        // Validate token by fetching user info
-        const response = await authMe(storedToken);
-        if (response.data) {
-          setUser(response.data);
-          authStore.setAuth(true, false);
-        } else if (response.status === 401) {
-          // Token is invalid (unauthorized), clear it
-          deleteCookie(TOKEN_COOKIE_NAME);
-          setToken(null);
-          setUser(null);
-          authStore.setAuth(false, false);
-        } else {
-          // Network error or other issues - keep token and assume authenticated
-          // This prevents users from being logged out due to temporary network issues
-          authStore.setAuth(true, false);
-        }
-      } else {
-        authStore.setAuth(false, false);
-      }
-    };
+  // Use TanStack Query to validate token
+  const { data: userResponse, isError } = useAuthMe(token, !!token);
 
-    validateToken();
-  }, [getToken]);
+  // Derive user state from userResponse
+  const user = userResponse?.data || null;
+
+  // Synchronize token state with API response (401 = invalid token)
+  // This is a legitimate case for setState in effect as we're syncing with external system (API)
+  useEffect(() => {
+    if (token && userResponse?.status === 401) {
+      deleteCookie(TOKEN_COOKIE_NAME);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronizing with external system (API auth state)
+      setToken(null);
+      authStore.setAuth(false, false);
+    }
+  }, [token, userResponse?.status]);
+
+  // Synchronize auth state based on token and user response
+  useEffect(() => {
+    if (token && userResponse) {
+      if (userResponse.data) {
+        authStore.setAuth(true, false);
+      } else if (userResponse.error && userResponse.status !== 401) {
+        // Network error or other issues - keep token and assume authenticated
+        // This prevents users from being logged out due to temporary network issues
+        authStore.setAuth(true, false);
+      }
+    } else if (token && isError) {
+      // Error fetching user, but keep token
+      authStore.setAuth(true, false);
+    } else if (!token) {
+      authStore.setAuth(false, false);
+    }
+  }, [token, userResponse, isError]);
 
   useEffect(() => {
     // Redirect to login (root) if not authenticated and not already on login page
@@ -136,25 +150,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Call the server API to login
-      const response = await authLogin({ email, password });
+      // Use TanStack Query mutation for login
+      const result = await loginMutation.mutateAsync({ email, password });
 
-      if (response.error) {
-        return { success: false, error: response.error };
+      if (result.error) {
+        return { success: false, error: result.error };
       }
 
-      if (response.data?.access_token) {
-        const accessToken = response.data.access_token;
+      if (result.data?.access_token) {
+        const accessToken = result.data.access_token;
         
         // Store the token in cookie
         setCookie(TOKEN_COOKIE_NAME, accessToken);
         setToken(accessToken);
-
-        // Fetch user info
-        const userResponse = await authMe(accessToken);
-        if (userResponse.data) {
-          setUser(userResponse.data);
-        }
 
         authStore.setAuth(true);
         router.push('/summary');
@@ -165,23 +173,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       return { success: false, error: 'Unable to connect to server. Please check your connection and try again.' };
     }
-  }, [router]);
+  }, [router, loginMutation]);
 
   const logout = useCallback(async () => {
     const currentToken = getToken();
     
-    // Call server logout to invalidate token
+    // Use TanStack Query mutation for logout
     if (currentToken) {
-      await authLogout(currentToken);
+      try {
+        await logoutMutation.mutateAsync(currentToken);
+      } catch {
+        // Ignore errors during logout
+      }
     }
 
     // Clear local state
     deleteCookie(TOKEN_COOKIE_NAME);
     setToken(null);
-    setUser(null);
     authStore.setAuth(false);
     router.push('/');
-  }, [router, getToken]);
+  }, [router, getToken, logoutMutation]);
 
   return (
     <AuthContext.Provider value={{ 
