@@ -97,14 +97,5 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 // Initialize auth state from cookie on load
 if (typeof window !== 'undefined') {
-  const token = getCookie(TOKEN_COOKIE_NAME);
-  if (token) {
-    useAuthStore.setState({ 
-      token, 
-      isAuthenticated: !!token, 
-      isLoading: false 
-    });
-  } else {
-    useAuthStore.setState({ isLoading: false });
-  }
+  useAuthStore.getState().initialize();
 }

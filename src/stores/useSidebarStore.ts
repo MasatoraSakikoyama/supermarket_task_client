@@ -19,6 +19,8 @@ export const useSidebarStore = create<SidebarState>((set) => ({
 }));
 
 // Initialize sidebar state based on window size
+// Note: This resize listener is intentionally global and persists for the app lifetime
+// to maintain responsive sidebar behavior throughout the application
 if (typeof window !== 'undefined') {
   const handleResize = () => {
     if (window.innerWidth < 768) {
