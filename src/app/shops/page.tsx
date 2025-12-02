@@ -30,19 +30,27 @@ export default function ShopsPage() {
         return;
       }
 
-      const response = await getShops(token, offset, limit);
-      
-      if (cancelled) return;
+      try {
+        const response = await getShops(token, offset, limit);
+        
+        if (cancelled) return;
 
-      if (response.error) {
-        setError(response.error);
-      } else if (response.data) {
-        setShops(response.data);
-        // If we received fewer items than the limit, there are no more pages
-        setHasMore(response.data.length === limit);
+        if (response.error) {
+          setError(response.error);
+        } else if (response.data) {
+          setShops(response.data);
+          // If we received fewer items than the limit, there are no more pages
+          setHasMore(response.data.length >= limit);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch shops');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-      
-      setLoading(false);
     };
 
     fetchShops();
