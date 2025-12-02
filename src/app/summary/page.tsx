@@ -13,16 +13,16 @@ interface SummaryData {
 }
 
 export default function SummaryPage() {
-  const [data, setData] = useState<SummaryData[]>([]);
+  const [allData, setAllData] = useState<SummaryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
   const [limit] = useState(10);
-  const [hasMore, setHasMore] = useState(true);
 
-  const fetchSummary = async (newOffset: number) => {
+  const fetchSummary = async () => {
     setLoading(true);
     setError(null);
+    setOffset(0); // Reset to first page when fetching new data
     
     // Example API call - replace with your actual API endpoint
     const response = await get<SummaryData[]>('/api/summary');
@@ -30,11 +30,7 @@ export default function SummaryPage() {
     if (response.error) {
       setError(response.error);
     } else if (response.data) {
-      // Simulate pagination with mock data
-      const allData = response.data;
-      const paginatedData = allData.slice(newOffset, newOffset + limit);
-      setData(paginatedData);
-      setHasMore(newOffset + limit < allData.length);
+      setAllData(response.data);
     }
     
     setLoading(false);
@@ -42,26 +38,29 @@ export default function SummaryPage() {
 
   useEffect(() => {
     // Uncomment to fetch data on page load
-    // fetchSummary(offset);
-  }, [offset]);
+    // fetchSummary();
+  }, []);
 
   const handlePrevPage = () => {
     if (offset >= limit) {
-      const newOffset = offset - limit;
-      setOffset(newOffset);
-      fetchSummary(newOffset);
+      setOffset(offset - limit);
     }
   };
 
   const handleNextPage = () => {
-    if (hasMore) {
-      const newOffset = offset + limit;
-      setOffset(newOffset);
-      fetchSummary(newOffset);
+    if (offset + limit < allData.length) {
+      setOffset(offset + limit);
     }
   };
 
   const currentPage = Math.floor(offset / limit) + 1;
+  
+  // Calculate paginated data from all data
+  const paginatedData = useMemo(() => {
+    return allData.slice(offset, offset + limit);
+  }, [allData, offset, limit]);
+
+  const hasMore = offset + limit < allData.length;
 
   const columns: Column<SummaryData>[] = useMemo(
     () => [
@@ -98,7 +97,7 @@ export default function SummaryPage() {
 
       <div className="mb-4 md:mb-6">
         <button
-          onClick={() => fetchSummary(offset)}
+          onClick={fetchSummary}
           disabled={loading}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base w-full sm:w-auto"
         >
@@ -115,7 +114,7 @@ export default function SummaryPage() {
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <Table
           columns={columns}
-          data={data}
+          data={paginatedData}
           loading={loading}
           emptyMessage='No data available. Click "Fetch Summary Data" to load data from the API.'
           getRowKey={(item) => String(item.id)}
