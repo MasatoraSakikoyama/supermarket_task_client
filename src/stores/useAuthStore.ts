@@ -5,6 +5,10 @@ import { AccountResponse } from '@/lib/type';
 
 // Token cookie name
 const TOKEN_COOKIE_NAME = 'supermarket_task_auth_token';
+const TOKEN_TIMESTAMP_COOKIE_NAME = 'supermarket_task_auth_token_ts';
+
+// Token expiration time (24 hours in milliseconds)
+const TOKEN_MAX_AGE = 24 * 60 * 60 * 1000;
 
 // Cookie utility functions
 const setCookie = (name: string, value: string, days: number = 7): void => {
@@ -38,12 +42,14 @@ interface AuthState {
   isLoading: boolean;
   user: AccountResponse | null;
   token: string | null;
+  shouldValidateToken: boolean; // Flag to control when to validate token
   setAuth: (isAuthenticated: boolean, isLoading?: boolean) => void;
   setUser: (user: AccountResponse | null) => void;
   setToken: (token: string | null) => void;
   getToken: () => string | null;
   initialize: () => void;
   clearAuth: () => void;
+  setShouldValidateToken: (should: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -51,6 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
   user: null,
   token: null,
+  shouldValidateToken: false, // Don't validate token on initial load
   
   setAuth: (isAuthenticated: boolean, isLoading: boolean = false) => {
     set({ isAuthenticated, isLoading });
@@ -63,10 +70,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   setToken: (token: string | null) => {
     if (token) {
       setCookie(TOKEN_COOKIE_NAME, token);
+      setCookie(TOKEN_TIMESTAMP_COOKIE_NAME, Date.now().toString()); // Store timestamp
     } else {
       deleteCookie(TOKEN_COOKIE_NAME);
+      deleteCookie(TOKEN_TIMESTAMP_COOKIE_NAME);
     }
-    set({ token });
+    set({ token, shouldValidateToken: !!token }); // Enable validation when token is set
   },
   
   getToken: (): string | null => {
@@ -76,22 +85,68 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialize: () => {
     if (typeof document !== 'undefined') {
       const token = getCookie(TOKEN_COOKIE_NAME);
-      set({ 
-        token, 
-        isAuthenticated: !!token, 
-        isLoading: false 
-      });
+      const tokenTimestamp = getCookie(TOKEN_TIMESTAMP_COOKIE_NAME);
+      
+      if (token && tokenTimestamp) {
+        const timestamp = parseInt(tokenTimestamp, 10);
+        const now = Date.now();
+        const age = now - timestamp;
+        
+        // If token is older than TOKEN_MAX_AGE, consider it stale and don't use it
+        if (age > TOKEN_MAX_AGE) {
+          // Clear stale token without making API call
+          deleteCookie(TOKEN_COOKIE_NAME);
+          deleteCookie(TOKEN_TIMESTAMP_COOKIE_NAME);
+          set({ 
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+            shouldValidateToken: false
+          });
+        } else {
+          // Token is recent enough, validate it
+          set({ 
+            token,
+            isAuthenticated: false,
+            isLoading: true, // Loading while validating
+            shouldValidateToken: true // Validate token
+          });
+        }
+      } else if (token) {
+        // Token exists but no timestamp - treat as stale
+        deleteCookie(TOKEN_COOKIE_NAME);
+        set({ 
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+          shouldValidateToken: false
+        });
+      } else {
+        // No token
+        set({ 
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+          shouldValidateToken: false
+        });
+      }
     }
   },
   
   clearAuth: () => {
     deleteCookie(TOKEN_COOKIE_NAME);
+    deleteCookie(TOKEN_TIMESTAMP_COOKIE_NAME);
     set({ 
       isAuthenticated: false, 
       isLoading: false, 
       user: null, 
-      token: null 
+      token: null,
+      shouldValidateToken: false
     });
+  },
+  
+  setShouldValidateToken: (should: boolean) => {
+    set({ shouldValidateToken: should });
   },
 }));
 

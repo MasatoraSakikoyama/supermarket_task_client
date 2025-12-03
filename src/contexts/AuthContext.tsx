@@ -18,13 +18,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token, 
     isLoading,
     isAuthenticated,
+    shouldValidateToken,
     setAuth, 
     setUser, 
     clearAuth,
   } = useAuthStore();
 
-  // Use TanStack Query to validate token
-  const { data: userResponse, isError } = useAuthMe(token);
+  // Use TanStack Query to validate token only when shouldValidateToken is true
+  const { data: userResponse, isError } = useAuthMe(token, shouldValidateToken);
 
   // Synchronize token state with API response (401 = invalid token)
   useEffect(() => {
@@ -39,9 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (userResponse.data) {
         setAuth(true, false);
         setUser(userResponse.data);
-      } else if (userResponse.error && userResponse.status !== 401) {
-        // Network error or other issues - keep token and assume authenticated
-        setAuth(true, false);
+      } else if (userResponse.error) {
+        if (userResponse.status === 401) {
+          // Invalid token - auth will be cleared by the effect above
+          setAuth(false, false);
+        } else {
+          // Network error or other issues - keep token and assume authenticated
+          setAuth(true, false);
+        }
       }
     } else if (token && isError) {
       // Error fetching user, but keep token

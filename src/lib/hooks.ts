@@ -71,7 +71,7 @@ export function useAuthLogout() {
 /**
  * Hook for getting current user information
  */
-export function useAuthMe(token: string | null) {
+export function useAuthMe(token: string | null, shouldValidate: boolean = true) {
   return useQuery({
     queryKey: ['auth', 'me', token],
     queryFn: () => {
@@ -80,7 +80,7 @@ export function useAuthMe(token: string | null) {
       }
       return authMe(token);
     },
-    enabled: !!token,
+    enabled: !!token && shouldValidate, // Only enable when token exists AND we should validate
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
