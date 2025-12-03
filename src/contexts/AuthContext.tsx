@@ -51,8 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Network error or other issues - keep token and assume authenticated
           setAuth(true, false);
         }
-      } else if (isError) {
-        // Error fetching user, but keep token
+      } else if (isError && shouldFetchUser) {
+        // Error fetching user (only relevant when we tried to fetch), but keep token
         setAuth(true, false);
       } else {
         // Token exists but no response yet (initial load)
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else if (!token) {
       setAuth(false, false);
     }
-  }, [token, userResponse, isError, pathname, setAuth, setUser]);
+  }, [token, userResponse, isError, pathname, shouldFetchUser, setAuth, setUser]);
 
   // Redirect to login (root) if not authenticated and not already on login page
   useEffect(() => {
