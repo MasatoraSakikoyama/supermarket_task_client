@@ -192,7 +192,7 @@ export function useShopAccountDataList(
       if (!token) {
         throw new Error('No token provided');
       }
-      return getShopAccountDataLisr(token, shopId, offset, limit);
+      return getShopAccountEntryList(token, shopId, offset, limit);
     },
     enabled: enabled && !!token && shopId > 0,
   });
@@ -213,7 +213,7 @@ export function useShopAccountData(
       if (!token) {
         throw new Error('No token provided');
       }
-      return getShopAccountData(token, shopId, accountDataId);
+      return getShopAccountEntry(token, shopId, accountDataId);
     },
     enabled: enabled && !!token && shopId > 0 && accountDataId > 0,
   });
@@ -225,8 +225,8 @@ export function useShopAccountData(
 export function useCreateShopAccountData() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopAccountDataCreate }) =>
-      createShopAccountData(token, shopId, data),
+    mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopAccountEntryCreate }) =>
+      createShopAccountEntry(token, shopId, data),
     onSuccess: (_, variables) => {
       // Invalidate account data list on create
       queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_data'] });
@@ -249,8 +249,8 @@ export function useUpdateShopAccountData() {
       token: string;
       shopId: number;
       accountDataId: number;
-      data: ShopAccountDataUpdate;
-    }) => updateShopAccountData(token, shopId, accountDataId, data),
+      data: ShopAccountEntryUpdate;
+    }) => updateShopAccountEntry(token, shopId, accountDataId, data),
     onSuccess: (_, variables) => {
       // Invalidate specific account data and account data list on update
       queryClient.invalidateQueries({
@@ -268,7 +268,7 @@ export function useDeleteShopAccountData() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ token, shopId, accountDataId }: { token: string; shopId: number; accountDataId: number }) =>
-      deleteShopAccountData(token, shopId, accountDataId),
+      deleteShopAccountEntry(token, shopId, accountDataId),
     onSuccess: (_, variables) => {
       // Invalidate specific account dataand account data list on delete
       queryClient.invalidateQueries({

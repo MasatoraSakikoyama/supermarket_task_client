@@ -13,7 +13,7 @@ export enum AccountPeriodType {
   Yearly = 4,
 }
 
-export const AccountPeriodTypeLabels = {
+export const AccountPeriodTypeLabels: Record<AccountPeriodType, string> = {
   [AccountPeriodType.Monthly]: '月次',
   [AccountPeriodType.Quarterly]: '四半期',
   [AccountPeriodType.SemiAnnual]: '半期',

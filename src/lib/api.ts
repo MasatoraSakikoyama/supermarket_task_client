@@ -212,9 +212,9 @@ export async function getShopAccountEntryList(
   shopId: number,
   offset: number = 0,
   limit: number = 100
-): Promise<ApiResponse<ShopAccountEntryListResponse[]>> {
+): Promise<ApiResponse<ShopAccountEntryResponse[]>> {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
-  return get<ShopAccountEntryListResponse[]>(`/shop/${shopId}/account_data?${params}`, {
+  return get<ShopAccountEntryResponse[]>(`/shop/${shopId}/account_data?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
