@@ -42,7 +42,7 @@ export default function ShopsEditPage() {
   useEffect(() => {
     if (shopResponse?.data) {
       const shop = shopResponse.data;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Valid use case: syncing external API data to form state
       setFormData({
         name: shop.name,
         description: shop.description || '',
@@ -95,8 +95,9 @@ export default function ShopsEditPage() {
           router.push('/shops');
         }, 1500);
       }
-    } catch {
-      setMessage({ type: 'error', text: 'Failed to update shop' });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update shop';
+      setMessage({ type: 'error', text: errorMessage });
     }
   };
 
