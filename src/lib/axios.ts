@@ -35,6 +35,21 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
+      
+      // Handle 401 Unauthorized - automatically logout
+      if (error.response.status === 401) {
+        // Import clearAuth dynamically to avoid circular dependency
+        import('@/stores/useAuthStore').then(({ useAuthStore }) => {
+          const clearAuth = useAuthStore.getState().clearAuth;
+          clearAuth();
+          
+          // Redirect to login page if not already there
+          if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+            window.location.href = '/';
+          }
+        });
+      }
+      
       return Promise.reject(error);
     } else if (error.request) {
       // The request was made but no response was received
