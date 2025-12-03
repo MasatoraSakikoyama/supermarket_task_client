@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShopResponse } from '@/lib/type';
 import { useShops } from '@/lib/hooks';
@@ -9,6 +10,7 @@ import Table, { Column } from '@/components/Table';
 import { DEFAULT_PAGE_SIZE, AccountPeriodTypeLabels } from '@/constants';
 
 export default function ShopsPage() {
+  const router = useRouter();
   const [offset, setOffset] = useState(0);
   const [limit] = useState(DEFAULT_PAGE_SIZE);
   const { getToken } = useAuth();
@@ -77,7 +79,7 @@ export default function ShopsPage() {
             <button
               className="text-blue-600 hover:underline"
               onClick={() => {
-                // Handle edit action
+                router.push(`/shops/edit?id=${shop.id}`);
               }}
             >
               Edit
@@ -94,7 +96,7 @@ export default function ShopsPage() {
         ),
       },
     ],
-    []
+    [router]
   );
 
   return (
