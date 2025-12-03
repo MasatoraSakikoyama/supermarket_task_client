@@ -1,31 +1,29 @@
 {
-  "name": "supermarket_task_client",
-  "version": "1.0.0",
-  "description": "TypeScript client library for Supermarket Task Server API",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "name": "supermarket_task",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "tsc && node dist/server.js",
-    "lint": "tsc --noEmit",
-    "clean": "rm -rf dist"
-  },
-  "keywords": ["api", "client", "supermarket", "fastapi", "typescript"],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/express": "^5.0.5",
-    "@types/node": "^24.10.1",
-    "@types/swagger-ui-express": "^4.1.8",
-    "typescript": "^5.9.3"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "swagger-ui-express": "^5.0.1"
+    "@tanstack/react-query": "^5.90.11",
+    "axios": "^1.13.2",
+    "next": "16.0.5",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "zustand": "^5.0.9"
   },
-  "files": [
-    "dist",
-    "public"
-  ]
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.5",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
 }

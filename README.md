@@ -1,131 +1,83 @@
-# Supermarket Task Client
+# Supermarket Task App
 
-TypeScript client library for the Supermarket Task Server API with built-in API documentation endpoints.
+A web application built with React and Next.js for supermarket task management.
 
 ## Features
 
-- **API Client**: TypeScript API client library (`src/lib/api.ts`) with full type definitions
-- **OpenAPI Specification**: Complete OpenAPI 3.1 specification (`/openapi.json`)
-- **Swagger UI**: Interactive API documentation (`/docs`)
-- **ReDoc**: Beautiful API documentation (`/redoc`)
+- **Summary Page**: View and manage summary data from Web API
+- **Register Page**: Register new items via Web API
+- **Update Page**: Update existing items via Web API
+- **Delete Page**: Delete items via Web API
 
-## Installation
+## Tech Stack
+
+- [Next.js](https://nextjs.org) - React framework for production
+- [React](https://reactjs.org) - JavaScript library for building user interfaces
+- [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+
+## Getting Started
+
+First, install the dependencies:
 
 ```bash
 npm install
 ```
 
-## Build
+Then, run the development server:
 
 ```bash
-npm run build
+npm run dev
 ```
 
-## Usage
-
-### Running the Documentation Server
-
-Start the Express server to serve API documentation:
-
-```bash
-npm start
-```
-
-The server will be available at http://localhost:3000 with the following endpoints:
-- `/` - Root endpoint with links to documentation
-- `/openapi.json` - OpenAPI specification
-- `/docs` - Swagger UI interactive documentation
-- `/redoc` - ReDoc documentation
-
-### Using the API Client Library
-
-```typescript
-import { createApiClient } from 'supermarket_task_client';
-
-// Create API client
-const api = createApiClient('http://your-api-server-url');
-
-// Authentication
-async function example() {
-  // Register a new account
-  const account = await api.register({
-    username: 'testuser',
-    email: 'test@example.com',
-    password: 'securepassword'
-  });
-
-  // Login
-  const token = await api.login({
-    username: 'testuser',
-    password: 'securepassword'
-  });
-
-  // The access token is automatically set after login
-  // Now you can call authenticated endpoints
-
-  // Get current user info
-  const me = await api.getMe();
-
-  // Shop operations
-  const shops = await api.getShops();
-  const newShop = await api.createShop({ name: 'My Shop', description: 'A test shop' });
-  const shop = await api.getShop(newShop.id);
-  await api.updateShop(shop.id, { name: 'Updated Shop Name' });
-
-  // Shop settlements
-  const settlements = await api.getShopSettlements(shop.id);
-  const newSettlement = await api.createShopSettlement(shop.id, { name: 'Settlement 1' });
-
-  // Logout
-  await api.logout();
-}
-```
-
-## API Endpoints
-
-### Authentication (No login required)
-- `POST /auth/register` - Register a new user
-- `POST /auth/login` - Login and get access token
-
-### Authentication (Login required)
-- `POST /auth/logout` - Logout and invalidate token
-- `GET /auth/me` - Get current user information
-
-### Shops (Login required)
-- `GET /shops` - List all shops
-- `GET /shops/{shop_id}` - Get shop by ID
-- `POST /shops` - Create a new shop
-- `PUT /shops/{shop_id}` - Update a shop
-- `DELETE /shops/{shop_id}` - Delete a shop
-
-### Shop Settlements (Login required)
-- `GET /shops/{shop_id}/settlements` - List all settlements for a shop
-- `GET /shops/{shop_id}/settlements/{settlement_id}` - Get settlement by ID
-- `POST /shops/{shop_id}/settlements` - Create a new settlement
-- `PUT /shops/{shop_id}/settlements/{settlement_id}` - Update a settlement
-- `DELETE /shops/{shop_id}/settlements/{settlement_id}` - Delete a settlement
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Project Structure
 
 ```
-.
-├── public/
-│   └── openapi.json      # OpenAPI specification
-├── src/
-│   ├── lib/
-│   │   ├── api.ts        # API client library
-│   │   └── types.ts      # TypeScript type definitions
-│   ├── index.ts          # Library entry point
-│   └── server.ts         # Express documentation server
-├── package.json
-├── tsconfig.json
-└── README.md
+src/
+├── app/
+│   ├── layout.tsx        # Root layout with navigation
+│   ├── page.tsx          # Home page
+│   ├── summary/
+│   │   └── page.tsx      # Summary page
+│   ├── register/
+│   │   └── page.tsx      # Register page
+│   ├── update/
+│   │   └── page.tsx      # Update page
+│   └── delete/
+│       └── page.tsx      # Delete page
+├── components/
+│   └── Navigation.tsx    # Navigation component
+└── lib/
+    └── api.ts            # Web API utility functions
 ```
 
-## Related Repositories
+## Web API Usage
 
-- [supermarket_task_server](https://github.com/MasatoraSakikoyama/supermarket_task_server) - FastAPI backend server
+The application includes a Web API utility (`src/lib/api.ts`) with the following functions:
 
-## License
+- `get<T>(url, headers?)` - GET request
+- `post<T>(url, body, headers?)` - POST request
+- `put<T>(url, body, headers?)` - PUT request
+- `del<T>(url, headers?)` - DELETE request
+- `patch<T>(url, body, headers?)` - PATCH request
 
-ISC
+Example usage:
+
+```typescript
+import { get, post } from '@/lib/api';
+
+// GET request
+const response = await get<DataType>('/api/endpoint');
+
+// POST request
+const response = await post<ResponseType>('/api/endpoint', { data: 'value' });
+```
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint

@@ -1,311 +1,273 @@
 /**
- * API Client for the Supermarket Task Server
- *
- * This module provides API call functions for interacting with the FastAPI backend.
- * It supports all endpoints including authentication, shops, and shop settlements.
+ * Web API utility functions for making HTTP requests
  */
 
-import type {
-  AccountCreate,
-  AccountResponse,
+import { AxiosError, AxiosRequestConfig } from 'axios';
+import axiosInstance from '@/lib/axios';
+import {
+  ApiResponse,
+  ApiRequestOptions,
+  UserCreate,
+  UserResponse,
   LoginRequest,
   TokenResponse,
   ShopCreate,
   ShopUpdate,
   ShopResponse,
-  ShopSettlementCreate,
-  ShopSettlementUpdate,
-  ShopSettlementResponse,
-} from "./types";
-
-// Re-export types for convenience
-export type {
-  AccountCreate,
-  AccountResponse,
-  LoginRequest,
-  TokenResponse,
-  ShopCreate,
-  ShopUpdate,
-  ShopResponse,
-  ShopSettlementCreate,
-  ShopSettlementUpdate,
-  ShopSettlementResponse,
-};
+  ShopAccountEntryCreate,
+  ShopAccountEntryUpdate,
+  ShopAccountEntryResponse,
+} from '@/type/api';
 
 /**
- * API Client Configuration
+ * Base API client for making HTTP requests using axios
  */
-interface ApiClientConfig {
-  baseUrl: string;
-  accessToken?: string;
-}
+export async function apiRequest<T>(
+  url: string,
+  options: ApiRequestOptions = {}
+): Promise<ApiResponse<T>> {
+  const { method = 'GET', headers = {}, body } = options;
 
-/**
- * API Error class for handling HTTP errors
- */
-export class ApiError extends Error {
-  status: number;
-  detail: string;
-
-  constructor(status: number, detail: string) {
-    super(detail);
-    this.name = "ApiError";
-    this.status = status;
-    this.detail = detail;
-  }
-}
-
-/**
- * API Client class for making requests to the Supermarket Task Server
- */
-export class ApiClient {
-  private baseUrl: string;
-  private accessToken?: string;
-
-  constructor(config: ApiClientConfig) {
-    this.baseUrl = config.baseUrl.replace(/\/$/, "");
-    this.accessToken = config.accessToken;
-  }
-
-  /**
-   * Set the access token for authenticated requests
-   */
-  setAccessToken(token: string): void {
-    this.accessToken = token;
-  }
-
-  /**
-   * Clear the access token
-   */
-  clearAccessToken(): void {
-    this.accessToken = undefined;
-  }
-
-  /**
-   * Get authorization headers if token is set
-   */
-  private getAuthHeaders(): Record<string, string> {
-    if (this.accessToken) {
-      return { Authorization: `Bearer ${this.accessToken}` };
-    }
-    return {};
-  }
-
-  /**
-   * Generic request method
-   */
-  private async request<T>(
-    method: string,
-    path: string,
-    body?: unknown,
-    requiresAuth = true
-  ): Promise<T> {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...(requiresAuth ? this.getAuthHeaders() : {}),
-    };
-
-    const response = await fetch(`${this.baseUrl}${path}`, {
+  try {
+    const config: AxiosRequestConfig = {
+      url,
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+      data: body,
+    };
 
-    if (!response.ok) {
-      let detail = "An error occurred";
-      try {
-        const errorData = (await response.json()) as { detail?: string };
-        detail = errorData.detail || detail;
-      } catch {
-        // Ignore JSON parse errors
-      }
-      throw new ApiError(response.status, detail);
+    const response = await axiosInstance.request<T>(config);
+
+    return {
+      data: response.data,
+      error: null,
+      status: response.status,
+    };
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return {
+        data: null,
+        error: error.response?.data?.message || error.message || 'Request failed',
+        status: error.response?.status || 0,
+      };
     }
-
-    // For 204 No Content responses
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return response.json() as Promise<T>;
-  }
-
-  // ==================== Auth Endpoints ====================
-
-  /**
-   * Register a new account
-   * POST /auth/register
-   */
-  async register(data: AccountCreate): Promise<AccountResponse> {
-    return this.request<AccountResponse>("POST", "/auth/register", data, false);
-  }
-
-  /**
-   * Login and get access token
-   * POST /auth/login
-   */
-  async login(data: LoginRequest): Promise<TokenResponse> {
-    const response = await this.request<TokenResponse>(
-      "POST",
-      "/auth/login",
-      data,
-      false
-    );
-    // Automatically set the access token on successful login
-    if (response.access_token) {
-      this.setAccessToken(response.access_token);
-    }
-    return response;
-  }
-
-  /**
-   * Logout and invalidate token
-   * POST /auth/logout
-   */
-  async logout(): Promise<void> {
-    await this.request<void>("POST", "/auth/logout");
-    this.clearAccessToken();
-  }
-
-  /**
-   * Get current account information
-   * GET /auth/me
-   */
-  async getMe(): Promise<AccountResponse> {
-    return this.request<AccountResponse>("GET", "/auth/me");
-  }
-
-  // ==================== Shop Endpoints ====================
-
-  /**
-   * Get all shops with pagination
-   * GET /shops
-   */
-  async getShops(skip = 0, limit = 100): Promise<ShopResponse[]> {
-    return this.request<ShopResponse[]>(
-      "GET",
-      `/shops?skip=${skip}&limit=${limit}`
-    );
-  }
-
-  /**
-   * Get a single shop by ID
-   * GET /shops/{shop_id}
-   */
-  async getShop(shopId: number): Promise<ShopResponse> {
-    return this.request<ShopResponse>("GET", `/shops/${shopId}`);
-  }
-
-  /**
-   * Create a new shop
-   * POST /shops
-   */
-  async createShop(data: ShopCreate): Promise<ShopResponse> {
-    return this.request<ShopResponse>("POST", "/shops", data);
-  }
-
-  /**
-   * Update an existing shop
-   * PUT /shops/{shop_id}
-   */
-  async updateShop(shopId: number, data: ShopUpdate): Promise<ShopResponse> {
-    return this.request<ShopResponse>("PUT", `/shops/${shopId}`, data);
-  }
-
-  /**
-   * Delete a shop
-   * DELETE /shops/{shop_id}
-   */
-  async deleteShop(shopId: number): Promise<void> {
-    return this.request<void>("DELETE", `/shops/${shopId}`);
-  }
-
-  // ==================== Shop Settlement Endpoints ====================
-
-  /**
-   * Get all settlements for a shop with pagination
-   * GET /shops/{shop_id}/settlements
-   */
-  async getShopSettlements(
-    shopId: number,
-    skip = 0,
-    limit = 100
-  ): Promise<ShopSettlementResponse[]> {
-    return this.request<ShopSettlementResponse[]>(
-      "GET",
-      `/shops/${shopId}/settlements?skip=${skip}&limit=${limit}`
-    );
-  }
-
-  /**
-   * Get a single settlement by ID for a shop
-   * GET /shops/{shop_id}/settlements/{settlement_id}
-   */
-  async getShopSettlement(
-    shopId: number,
-    settlementId: number
-  ): Promise<ShopSettlementResponse> {
-    return this.request<ShopSettlementResponse>(
-      "GET",
-      `/shops/${shopId}/settlements/${settlementId}`
-    );
-  }
-
-  /**
-   * Create a new settlement for a shop
-   * POST /shops/{shop_id}/settlements
-   */
-  async createShopSettlement(
-    shopId: number,
-    data: ShopSettlementCreate
-  ): Promise<ShopSettlementResponse> {
-    return this.request<ShopSettlementResponse>(
-      "POST",
-      `/shops/${shopId}/settlements`,
-      data
-    );
-  }
-
-  /**
-   * Update an existing settlement for a shop
-   * PUT /shops/{shop_id}/settlements/{settlement_id}
-   */
-  async updateShopSettlement(
-    shopId: number,
-    settlementId: number,
-    data: ShopSettlementUpdate
-  ): Promise<ShopSettlementResponse> {
-    return this.request<ShopSettlementResponse>(
-      "PUT",
-      `/shops/${shopId}/settlements/${settlementId}`,
-      data
-    );
-  }
-
-  /**
-   * Delete a settlement for a shop
-   * DELETE /shops/{shop_id}/settlements/{settlement_id}
-   */
-  async deleteShopSettlement(
-    shopId: number,
-    settlementId: number
-  ): Promise<void> {
-    return this.request<void>(
-      "DELETE",
-      `/shops/${shopId}/settlements/${settlementId}`
-    );
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      status: 0,
+    };
   }
 }
 
 /**
- * Create a new API client instance
+ * GET request helper
  */
-export function createApiClient(
-  baseUrl: string,
-  accessToken?: string
-): ApiClient {
-  return new ApiClient({ baseUrl, accessToken });
+export async function get<T>(url: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  return apiRequest<T>(url, { method: 'GET', headers });
 }
 
-// Default export for convenience
-export default ApiClient;
+/**
+ * POST request helper
+ */
+export async function post<T>(
+  url: string,
+  body: unknown,
+  headers?: Record<string, string>
+): Promise<ApiResponse<T>> {
+  return apiRequest<T>(url, { method: 'POST', body, headers });
+}
+
+/**
+ * PUT request helper
+ */
+export async function put<T>(
+  url: string,
+  body: unknown,
+  headers?: Record<string, string>
+): Promise<ApiResponse<T>> {
+  return apiRequest<T>(url, { method: 'PUT', body, headers });
+}
+
+/**
+ * DELETE request helper
+ */
+export async function del<T>(url: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  return apiRequest<T>(url, { method: 'DELETE', headers });
+}
+
+/**
+ * PATCH request helper
+ */
+export async function patch<T>(
+  url: string,
+  body: unknown,
+  headers?: Record<string, string>
+): Promise<ApiResponse<T>> {
+  return apiRequest<T>(url, { method: 'PATCH', body, headers });
+}
+
+// =============================================================================
+// Authentication API
+// =============================================================================
+
+/**
+ * Register a new user account
+ */
+export async function authRegister(data: UserCreate): Promise<ApiResponse<UserResponse>> {
+  return post<UserResponse>('/auth/register', data);
+}
+
+/**
+ * Login and get access token
+ */
+export async function authLogin(data: LoginRequest): Promise<ApiResponse<TokenResponse>> {
+  return post<TokenResponse>('/auth/login', data);
+}
+
+/**
+ * Logout and invalidate token
+ */
+export async function authLogout(token: string): Promise<ApiResponse<null>> {
+  return post<null>('/auth/logout', {}, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Get current user information
+ */
+export async function authMe(token: string): Promise<ApiResponse<UserResponse>> {
+  return get<UserResponse>('/auth/me', {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+// =============================================================================
+// Shops API
+// =============================================================================
+
+/**
+ * Get all shops with pagination
+ */
+export async function getShops(
+  token: string,
+  offset: number = 0,
+  limit: number = 100
+): Promise<ApiResponse<ShopResponse[]>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  return get<ShopResponse[]>(`/shop?${params}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Get a single shop by ID
+ */
+export async function getShop(token: string, shopId: number): Promise<ApiResponse<ShopResponse>> {
+  return get<ShopResponse>(`/shop/${shopId}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Create a new shop
+ */
+export async function createShop(token: string, data: ShopCreate): Promise<ApiResponse<ShopResponse>> {
+  return post<ShopResponse>('/shop', data, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Update an existing shop
+ */
+export async function updateShop(
+  token: string,
+  shopId: number,
+  data: ShopUpdate
+): Promise<ApiResponse<ShopResponse>> {
+  return put<ShopResponse>(`/shop/${shopId}`, data, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Delete a shop
+ */
+export async function deleteShop(token: string, shopId: number): Promise<ApiResponse<null>> {
+  return del<null>(`/shop/${shopId}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+// =============================================================================
+// Shop Account Data API
+// =============================================================================
+
+/**
+ * Get all Account Data for a shop with pagination
+ */
+export async function getShopAccountEntryList(
+  token: string,
+  shopId: number,
+  offset: number = 0,
+  limit: number = 100
+): Promise<ApiResponse<ShopAccountEntryResponse[]>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  return get<ShopAccountEntryResponse[]>(`/shop/${shopId}/account_data?${params}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Get a single Account Data by ID for a shop
+ */
+export async function getShopAccountEntry(
+  token: string,
+  shopId: number,
+  accountDataId: number
+): Promise<ApiResponse<ShopAccountEntryResponse>> {
+  return get<ShopAccountEntryResponse>(`/shop/${shopId}/account_data/${accountDataId}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Create a new Account Data for a shop
+ */
+export async function createShopAccountEntry(
+  token: string,
+  shopId: number,
+  data: ShopAccountEntryCreate
+): Promise<ApiResponse<ShopAccountEntryResponse>> {
+  return post<ShopAccountEntryResponse>(`/shop/${shopId}/account_data`, data, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Update an existing Account Data for a shop
+ */
+export async function updateShopAccountEntry(
+  token: string,
+  shopId: number,
+  accountDataId: number,
+  data: ShopAccountEntryUpdate
+): Promise<ApiResponse<ShopAccountEntryResponse>> {
+  return put<ShopAccountEntryResponse>(`/shop/${shopId}/account_data/${accountDataId}`, data, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Delete a Account Data for a shop
+ */
+export async function deleteShopAccountEntry(
+  token: string,
+  shopId: number,
+  accountDataId: number
+): Promise<ApiResponse<null>> {
+  return del<null>(`/shop/${shopId}/account_data/${accountDataId}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
