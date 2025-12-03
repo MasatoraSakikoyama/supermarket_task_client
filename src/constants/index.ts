@@ -1,3 +1,11 @@
+export const TOKEN_COOKIE_NAME = process.env.NEXT_PUBLIC_TOKEN_COOKIE_NAME || '';
+
+export const TOKEN_EXPIRATION_DAYS = Number(process.env.NEXT_PUBLIC_TOKEN_EXPIRATION_DAYS || '7');
+
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+
+export const DEFAULT_PAGE_SIZE = 10;
+
 export enum AccountPeriodType {
   Monthly = 1,
   Quarterly = 2,
