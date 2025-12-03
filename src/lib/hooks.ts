@@ -270,7 +270,7 @@ export function useDeleteShopAccountData() {
     mutationFn: ({ token, shopId, accountDataId }: { token: string; shopId: number; accountDataId: number }) =>
       deleteShopAccountEntry(token, shopId, accountDataId),
     onSuccess: (_, variables) => {
-      // Invalidate specific account dataand account data list on delete
+      // Invalidate specific account data and account data list on delete
       queryClient.invalidateQueries({
         queryKey: ['shop', variables.shopId, 'account_data', variables.accountDataId],
       });
