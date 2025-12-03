@@ -133,15 +133,6 @@ export async function authLogout(token: string): Promise<ApiResponse<null>> {
   });
 }
 
-/**
- * Get current user information
- */
-export async function authMe(token: string): Promise<ApiResponse<UserResponse>> {
-  return get<UserResponse>('/auth/me', {
-    'Authorization': `Bearer ${token}`,
-  });
-}
-
 // =============================================================================
 // Shops API
 // =============================================================================

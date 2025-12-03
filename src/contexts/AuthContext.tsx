@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthLogin, useAuthLogout, useAuthMe } from '@/lib/hooks';
+import { useAuthLogin, useAuthLogout } from '@/lib/hooks';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 /**
@@ -18,38 +18,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token, 
     isLoading,
     isAuthenticated,
-    setAuth, 
-    setUser, 
-    clearAuth,
+    setAuth,
   } = useAuthStore();
 
-  // Use TanStack Query to validate token
-  const { data: userResponse, isError } = useAuthMe(token);
-
-  // Synchronize token state with API response (401 = invalid token)
+  // Synchronize auth state based on token
   useEffect(() => {
-    if (token && userResponse?.status === 401) {
-      clearAuth();
-    }
-  }, [token, userResponse?.status, clearAuth]);
-
-  // Synchronize auth state based on token and user response
-  useEffect(() => {
-    if (token && userResponse) {
-      if (userResponse.data) {
-        setAuth(true, false);
-        setUser(userResponse.data);
-      } else if (userResponse.error && userResponse.status !== 401) {
-        // Network error or other issues - keep token and assume authenticated
-        setAuth(true, false);
-      }
-    } else if (token && isError) {
-      // Error fetching user, but keep token
+    if (token) {
       setAuth(true, false);
-    } else if (!token) {
+    } else {
       setAuth(false, false);
     }
-  }, [token, userResponse, isError, setAuth, setUser]);
+  }, [token, setAuth]);
 
   // Redirect to login (root) if not authenticated and not already on login page
   useEffect(() => {
@@ -79,11 +58,13 @@ export function useAuth() {
         return { success: false, error: result.error };
       }
 
-      if (result.data?.access_token) {
+      if (result.data?.access_token && result.data?.user) {
         const accessToken = result.data.access_token;
+        const user = result.data.user;
         
-        // Store the token in cookie and state
+        // Store the token and user in cookie and state
         store.setToken(accessToken);
+        store.setUser(user);
         store.setAuth(true);
 
         router.push('/summary');

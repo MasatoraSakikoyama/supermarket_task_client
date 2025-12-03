@@ -6,7 +6,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   authLogin,
   authLogout,
-  authMe,
   authRegister,
   getShops,
   getShop,
@@ -65,24 +64,6 @@ export function useAuthLogout() {
       // Invalidate all queries on logout
       queryClient.clear();
     },
-  });
-}
-
-/**
- * Hook for getting current user information
- */
-export function useAuthMe(token: string | null) {
-  return useQuery({
-    queryKey: ['auth', 'me', token],
-    queryFn: () => {
-      if (!token) {
-        throw new Error('No token provided');
-      }
-      return authMe(token);
-    },
-    enabled: !!token,
-    retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
