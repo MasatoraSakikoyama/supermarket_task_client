@@ -6,11 +6,11 @@ import { ShopResponse } from '@/lib/type';
 import { useShops } from '@/lib/hooks';
 import Pagination from '@/components/Pagination';
 import Table, { Column } from '@/components/Table';
-import { AccountPeriodTypeLabels } from '@/constants';
+import { DEFAULT_PAGE_SIZE, AccountPeriodTypeLabels } from '@/constants';
 
 export default function ShopsPage() {
   const [offset, setOffset] = useState(0);
-  const [limit] = useState(10);
+  const [limit] = useState(DEFAULT_PAGE_SIZE);
   const { getToken } = useAuth();
   const token = getToken();
 

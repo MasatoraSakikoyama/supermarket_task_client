@@ -2,15 +2,14 @@
 
 import { create } from 'zustand';
 import { AccountResponse } from '@/lib/type';
+import { TOKEN_COOKIE_NAME, TOKEN_EXPIRATION_DAYS } from '@/constants';
 
-// Token cookie name
-const TOKEN_COOKIE_NAME = 'supermarket_task_auth_token';
 
 // Cookie utility functions
-const setCookie = (name: string, value: string, days: number = 7): void => {
+const setCookie = (name: string, value: string): void => {
   if (typeof document === 'undefined') return;
   const expires = new Date();
-  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  expires.setTime(expires.getTime() + TOKEN_EXPIRATION_DAYS * 24 * 60 * 60 * 1000);
   document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Strict;Secure`;
 };
 

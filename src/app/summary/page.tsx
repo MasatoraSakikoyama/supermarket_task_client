@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useGet } from '@/lib/hooks';
 import Table, { Column } from '@/components/Table';
 import Pagination from '@/components/Pagination';
+import { DEFAULT_PAGE_SIZE } from '@/constants';
 
 interface SummaryData {
   id: number;
@@ -15,7 +16,7 @@ interface SummaryData {
 export default function SummaryPage() {
   const [shouldFetch, setShouldFetch] = useState(false);
   const [offset, setOffset] = useState(0);
-  const [limit] = useState(10);
+  const [limit] = useState(DEFAULT_PAGE_SIZE);
 
   // Use TanStack Query hook for fetching data
   const { data: response, isLoading, refetch } = useGet<SummaryData[]>('/api/summary', shouldFetch);
