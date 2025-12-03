@@ -49,7 +49,6 @@ interface AuthState {
   getToken: () => string | null;
   initialize: () => void;
   clearAuth: () => void;
-  setShouldValidateToken: (should: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -75,7 +74,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       deleteCookie(TOKEN_COOKIE_NAME);
       deleteCookie(TOKEN_TIMESTAMP_COOKIE_NAME);
     }
-    set({ token, shouldValidateToken: !!token }); // Enable validation when token is set
+    // New tokens from login always need validation, unlike existing tokens during init
+    set({ token, shouldValidateToken: !!token });
   },
   
   getToken: (): string | null => {
@@ -156,10 +156,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       token: null,
       shouldValidateToken: false
     });
-  },
-  
-  setShouldValidateToken: (should: boolean) => {
-    set({ shouldValidateToken: should });
   },
 }));
 
