@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect, useCallback } from 'react';
+import { ReactNode, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthLogin, useAuthLogout, useAuthMe } from '@/lib/hooks';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useAuthStore();
 
   // Only call getMe API when NOT on login page and token exists
-  const shouldFetchUser = !!token && pathname !== '/';
+  const shouldFetchUser = useMemo(() => !!token && pathname !== '/', [token, pathname]);
   
   // Use TanStack Query to validate token
   const { data: userResponse, isError } = useAuthMe(shouldFetchUser ? token : null);
