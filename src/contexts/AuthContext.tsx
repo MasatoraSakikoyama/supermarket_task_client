@@ -41,13 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAuth(true, false);
         setUser(userResponse.data);
       } else if (userResponse.error) {
-        if (userResponse.status === 401) {
-          // Invalid token - auth will be cleared by the effect above
-          setAuth(false, false);
-        } else {
+        if (userResponse.status !== 401) {
           // Network error or other issues - keep token and assume authenticated
           setAuth(true, false);
         }
+        // For 401, auth is cleared by the effect above, no need to setAuth here
       }
     } else if (token && isError) {
       // Error fetching user, but keep token

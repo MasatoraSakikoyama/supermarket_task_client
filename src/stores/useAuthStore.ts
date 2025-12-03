@@ -89,6 +89,18 @@ export const useAuthStore = create<AuthState>((set) => ({
       
       if (token && tokenTimestamp) {
         const timestamp = parseInt(tokenTimestamp, 10);
+        if (isNaN(timestamp)) {
+          // Invalid timestamp, treat as stale
+          deleteCookie(TOKEN_COOKIE_NAME);
+          deleteCookie(TOKEN_TIMESTAMP_COOKIE_NAME);
+          set({ 
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+            shouldValidateToken: false
+          });
+          return;
+        }
         const now = Date.now();
         const age = now - timestamp;
         
@@ -115,6 +127,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       } else if (token) {
         // Token exists but no timestamp - treat as stale
         deleteCookie(TOKEN_COOKIE_NAME);
+        deleteCookie(TOKEN_TIMESTAMP_COOKIE_NAME);
         set({ 
           token: null,
           isAuthenticated: false,
