@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect, useCallback } from 'react';
+import { ReactNode, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthLogin, useAuthLogout, useAuthMe } from '@/lib/hooks';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -23,8 +23,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearAuth,
   } = useAuthStore();
 
+  // Only call getMe API when NOT on login page and token exists
+  const shouldFetchUser = useMemo(() => !!token && pathname !== '/', [token, pathname]);
+  
   // Use TanStack Query to validate token
-  const { data: userResponse, isError } = useAuthMe(token);
+  const { data: userResponse, isError } = useAuthMe(shouldFetchUser ? token : null);
 
   // Synchronize token state with API response (401 = invalid token)
   useEffect(() => {
@@ -35,26 +38,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Synchronize auth state based on token and user response
   useEffect(() => {
-    if (token && userResponse) {
-      if (userResponse.data) {
+    if (token) {
+      if (pathname === '/') {
+        // On login page with token - just set authenticated without fetching user
         setAuth(true, false);
-        setUser(userResponse.data);
-      } else if (userResponse.error && userResponse.status !== 401) {
-        // Network error or other issues - keep token and assume authenticated
+      } else if (userResponse) {
+        // Not on login page - process user response
+        if (userResponse.data) {
+          setAuth(true, false);
+          setUser(userResponse.data);
+        } else if (userResponse.error && userResponse.status !== 401) {
+          // Network error or other issues - keep token and assume authenticated
+          setAuth(true, false);
+        }
+      } else if (isError && shouldFetchUser) {
+        // Error fetching user (only relevant when we tried to fetch), but keep token
+        setAuth(true, false);
+      } else {
+        // Token exists but no response yet (initial load)
         setAuth(true, false);
       }
-    } else if (token && isError) {
-      // Error fetching user, but keep token
-      setAuth(true, false);
     } else if (!token) {
       setAuth(false, false);
     }
-  }, [token, userResponse, isError, setAuth, setUser]);
+  }, [token, userResponse, isError, pathname, shouldFetchUser, setAuth, setUser]);
 
   // Redirect to login (root) if not authenticated and not already on login page
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && pathname !== '/') {
-      router.push('/');
+    if (!isLoading) {
+      if (!isAuthenticated && pathname !== '/') {
+        // Not authenticated and not on login page - redirect to login
+        router.push('/');
+      } else if (isAuthenticated && pathname === '/') {
+        // Authenticated but on login page - redirect to summary
+        router.push('/summary');
+      }
     }
   }, [isAuthenticated, isLoading, pathname, router]);
 
