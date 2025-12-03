@@ -2,6 +2,8 @@
  * Type definitions for API request/response
  */
 
+import { AccountPeriodType } from '@/constants';
+
 // =============================================================================
 // API Types
 // =============================================================================
@@ -53,17 +55,23 @@ export interface TokenResponse {
 export interface ShopCreate {
   name: string;
   description?: string;
+  period_type: AccountPeriodType;
+  is_cumulative: boolean;
 }
 
 export interface ShopUpdate {
   name?: string;
   description?: string;
+  period_type?: AccountPeriodType;
+  is_cumulative?: boolean;
 }
 
 export interface ShopResponse {
   id: number;
   name: string;
   description: string | null;
+  period_type: AccountPeriodType;
+  is_cumulative: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -62,7 +62,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
             {user && (
               <div className="text-sm text-gray-600">
-                Welcome {user.name}
+                Welcome {user.username}
               </div>
             )}
             <div className="flex-1"></div>
