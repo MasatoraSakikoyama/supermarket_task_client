@@ -74,7 +74,17 @@ export default function ShopsDetailPage() {
   }
 
   if (fetchShopError || !shopResponse?.data || fetchShopAccountTitleError || !shopAccountTitleResponse || fetchShopAccountEntryError || !shopAccountEntryResponse) {
-    const errorMessage = `Error: ${shopResponse?.error || 'Failed to fetch shop data'} ${shopAccountTitleResponse?.error || 'Failed to fetch shop account title data'} ${shopAccountEntryResponse?.error || 'Failed to fetch shop account entry data'}`;
+    const errors = [];
+    if (fetchShopError || !shopResponse?.data) {
+      errors.push(shopResponse?.error || 'Failed to fetch shop data');
+    }
+    if (fetchShopAccountTitleError || !shopAccountTitleResponse) {
+      errors.push(shopAccountTitleResponse?.error || 'Failed to fetch shop account title data');
+    }
+    if (fetchShopAccountEntryError || !shopAccountEntryResponse) {
+      errors.push(shopAccountEntryResponse?.error || 'Failed to fetch shop account entry data');
+    }
+    const errorMessage = errors.length > 0 ? `Error: ${errors.join('. ')}` : 'Error: Failed to load data';
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
