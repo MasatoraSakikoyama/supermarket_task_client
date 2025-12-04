@@ -29,8 +29,6 @@ export default function ShopsDetailPage() {
   const { data: shopAccountTitleResponse, isLoading: isFetchingShopAccountTitle, error: fetchShopAccountTitleError } = useShopAccountTitleList(
     token,
     shopId,
-    0,
-    100, // Get all account titles for headers
   );
 
   const { data: shopAccountEntryResponse, isLoading: isFetchingShopAccountEntry, error: fetchShopAccountEntryError } = useShopAccountEntryList(

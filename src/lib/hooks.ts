@@ -189,16 +189,14 @@ export function useDeleteShop() {
 export function useShopAccountTitleList(
   token: string | null,
   shopId: number,
-  offset: number = 0,
-  limit: number = 10,
 ) {
   return useQuery({
-    queryKey: ['shop', shopId, 'account_title', offset, limit],
+    queryKey: ['shop', shopId, 'account_title'],
     queryFn: () => {
       if (!token) {
         throw new Error('No token provided');
       }
-      return getShopAccountTitleList(token, shopId, offset, limit);
+      return getShopAccountTitleList(token, shopId);
     },
     enabled: !!token && shopId > 0,
   });

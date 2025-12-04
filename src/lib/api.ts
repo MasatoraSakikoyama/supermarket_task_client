@@ -213,11 +213,8 @@ export async function deleteShop(token: string, shopId: number): Promise<ApiResp
 export async function getShopAccountTitleList(
   token: string,
   shopId: number,
-  offset: number = 0,
-  limit: number = 100
 ): Promise<ApiResponse<ShopAccountTitleResponse[]>> {
-  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
-  return get<ShopAccountTitleResponse[]>(`/shop/${shopId}/account_title?${params}`, {
+  return get<ShopAccountTitleResponse[]>(`/shop/${shopId}/account_title`, {
     'Authorization': `Bearer ${token}`,
   });
 }
