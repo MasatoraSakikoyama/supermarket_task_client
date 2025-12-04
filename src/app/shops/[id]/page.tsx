@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
@@ -39,6 +39,21 @@ export default function ShopsDetailPage() {
     offset,
     limit,
   );
+
+  // Memoize unique periods calculation (must be before early returns)
+  const uniquePeriods = useMemo(() => {
+    const periods = new Set<string>();
+    if (shopAccountEntryResponse?.data) {
+      shopAccountEntryResponse.data.forEach((entry) => {
+        periods.add(`${entry.year}-${entry.month}`);
+      });
+    }
+    return Array.from(periods).sort();
+  }, [shopAccountEntryResponse]);
+
+  // Constants for styling
+  const BORDER_RIGHT_HEADER_CLASS = 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200';
+  const BORDER_RIGHT_CELL_CLASS = 'px-3 md:px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200';
 
 
   if (!shopId) {
@@ -147,50 +162,39 @@ export default function ShopsDetailPage() {
                     render: (item: ShopAccountTitleResponse) => (
                       <span className="font-medium">{item.name}</span>
                     ),
-                    className: 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200',
-                    cellClassName: 'px-3 md:px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200',
+                    className: BORDER_RIGHT_HEADER_CLASS,
+                    cellClassName: BORDER_RIGHT_CELL_CLASS,
                   },
                 ]}
                 data={shopAccountTitleResponse.data || []}
                 loading={isFetchingShopAccountTitle}
                 emptyMessage="No account titles available."
                 getRowKey={(item) => item.id}
-                headerClassName="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200"
+                headerClassName={BORDER_RIGHT_HEADER_CLASS}
               />
             </div>
 
             {/* Right table: Account Entries by period */}
             <div className="flex-grow min-w-0">
               <Table
-                columns={(() => {
-                  // Get unique year/month combinations from entries
-                  const uniquePeriods = new Set<string>();
-                  if (shopAccountEntryResponse.data) {
-                    shopAccountEntryResponse.data.forEach((entry) => {
-                      uniquePeriods.add(`${entry.year}-${entry.month}`);
-                    });
-                  }
-                  const sortedPeriods = Array.from(uniquePeriods).sort();
-
-                  return sortedPeriods.map((period) => {
-                    const [year, month] = period.split('-');
-                    return {
-                      key: period,
-                      header: `${year}/${month}`,
-                      render: (item: ShopAccountTitleResponse) => {
-                        // Find the amount for this account title and period
-                        const entry = shopAccountEntryResponse.data?.find(
-                          (e) =>
-                            e.shopp_account_title_id === item.id &&
-                            `${e.year}-${e.month}` === period
-                        );
-                        return entry ? entry.amount : '-';
-                      },
-                    } as Column<ShopAccountTitleResponse>;
-                  });
-                })()}
+                columns={uniquePeriods.map((period) => {
+                  const [year, month] = period.split('-');
+                  return {
+                    key: period,
+                    header: `${year}/${month}`,
+                    render: (item: ShopAccountTitleResponse) => {
+                      // Find the amount for this account title and period
+                      const entry = shopAccountEntryResponse.data?.find(
+                        (e) =>
+                          e.shopp_account_title_id === item.id &&
+                          `${e.year}-${e.month}` === period
+                      );
+                      return entry ? entry.amount : '-';
+                    },
+                  } as Column<ShopAccountTitleResponse>;
+                })}
                 data={shopAccountTitleResponse.data || []}
-                loading={isFetchingShopAccountEntry}
+                loading={isFetchingShopAccountTitle}
                 emptyMessage="No entries available."
                 getRowKey={(item) => item.id}
               />
