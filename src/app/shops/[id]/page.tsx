@@ -7,6 +7,7 @@ import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib
 import { AccountPeriodTypeLabels, DEFAULT_PAGE_SIZE } from '@/constants';
 import Pagination from '@/components/Pagination';
 import Table, { Column } from '@/components/Table';
+import MessageDisplay from '@/components/MessageDisplay';
 import { ShopAccountTitleResponse } from '@/type/api';
 
 export default function ShopsDetailPage() {
@@ -58,9 +59,7 @@ export default function ShopsDetailPage() {
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
-        <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-          Error: No shop ID provided
-        </div>
+        <MessageDisplay type="error" message="Error: No shop ID provided" />
       </div>
     );
   }
@@ -69,18 +68,17 @@ export default function ShopsDetailPage() {
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
-        <div className="text-gray-600">Loading shop data...</div>
+        <MessageDisplay type="loading" message="Loading shop data..." />
       </div>
     );
   }
 
   if (fetchShopError || !shopResponse?.data || fetchShopAccountTitleError || !shopAccountTitleResponse || fetchShopAccountEntryError || !shopAccountEntryResponse) {
+    const errorMessage = `Error: ${shopResponse?.error || 'Failed to fetch shop data'} ${shopAccountTitleResponse?.error || 'Failed to fetch shop account title data'} ${shopAccountEntryResponse?.error || 'Failed to fetch shop account entry data'}`;
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
-        <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-          Error: {shopResponse?.error || 'Failed to fetch shop data'} {shopAccountTitleResponse?.error || 'Failed to fetch shop account title data'} {shopAccountEntryResponse?.error || 'Failed to fetch shop account entry data'}
-        </div>
+        <MessageDisplay type="error" message={errorMessage} />
       </div>
     );
   }

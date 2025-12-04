@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useShop, useUpdateShop } from '@/lib/hooks';
 import { AccountPeriodType, AccountPeriodTypeLabels } from '@/constants';
+import MessageDisplay from '@/components/MessageDisplay';
 
 interface FormData {
   name: string;
@@ -101,9 +102,7 @@ export default function ShopsEditPage() {
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
-        <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-          Error: No shop ID provided
-        </div>
+        <MessageDisplay type="error" message="Error: No shop ID provided" />
       </div>
     );
   }
@@ -112,7 +111,7 @@ export default function ShopsEditPage() {
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
-        <div className="text-gray-600">Loading shop data...</div>
+        <MessageDisplay type="loading" message="Loading shop data..." />
       </div>
     );
   }
@@ -121,9 +120,7 @@ export default function ShopsEditPage() {
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
-        <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-          Error: {shopResponse?.error || 'Failed to fetch shop data'}
-        </div>
+        <MessageDisplay type="error" message={`Error: ${shopResponse?.error || 'Failed to fetch shop data'}`} />
       </div>
     );
   }
@@ -133,15 +130,10 @@ export default function ShopsEditPage() {
       <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
 
       {message && (
-        <div
-          className={`mb-4 md:mb-6 p-4 rounded-md text-sm ${
-            message.type === 'success'
-              ? 'bg-green-50 border border-green-200 text-green-700'
-              : 'bg-red-50 border border-red-200 text-red-700'
-          }`}
-        >
-          {message.text}
-        </div>
+        <MessageDisplay 
+          type={message.type} 
+          message={message.text}
+        />
       )}
 
       <form onSubmit={handleSubmit} className="w-full">
