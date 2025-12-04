@@ -162,46 +162,57 @@ export default function ShopsDetailPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {shopAccountTitleResponse.data && shopAccountTitleResponse.data.length > 0 ? (
-                  shopAccountTitleResponse.data.map((accountTitle) => {
-                    // Create a map of year-month to amount for this account title
-                    const amountsByPeriod = new Map<string, number>();
-                    if (shopAccountEntryResponse.data) {
-                      shopAccountEntryResponse.data.forEach((entry) => {
-                        if (entry.shopp_account_title_id === accountTitle.id) {
-                          const key = `${entry.year}-${entry.month}`;
-                          amountsByPeriod.set(key, entry.amount);
-                        }
-                      });
-                    }
-
-                    // Get unique periods for this row
+                  (() => {
+                    // Calculate unique periods once for all rows
                     const uniquePeriods = new Set<string>();
                     if (shopAccountEntryResponse.data) {
                       shopAccountEntryResponse.data.forEach((entry) => {
                         uniquePeriods.add(`${entry.year}-${entry.month}`);
                       });
                     }
+                    const sortedPeriods = Array.from(uniquePeriods).sort();
 
-                    return (
-                      <tr key={accountTitle.id}>
-                        <td className="px-3 md:px-6 py-4 text-sm font-medium text-gray-900">
-                          {accountTitle.name}
-                        </td>
-                        {Array.from(uniquePeriods).sort().map((period) => (
-                          <td
-                            key={period}
-                            className="px-3 md:px-6 py-4 text-sm text-gray-900"
-                          >
-                            {amountsByPeriod.get(period) ?? '-'}
+                    return shopAccountTitleResponse.data.map((accountTitle) => {
+                      // Create a map of year-month to amount for this account title
+                      const amountsByPeriod = new Map<string, number>();
+                      if (shopAccountEntryResponse.data) {
+                        shopAccountEntryResponse.data.forEach((entry) => {
+                          if (entry.shopp_account_title_id === accountTitle.id) {
+                            const key = `${entry.year}-${entry.month}`;
+                            amountsByPeriod.set(key, entry.amount);
+                          }
+                        });
+                      }
+
+                      return (
+                        <tr key={accountTitle.id}>
+                          <td className="px-3 md:px-6 py-4 text-sm font-medium text-gray-900">
+                            {accountTitle.name}
                           </td>
-                        ))}
-                      </tr>
-                    );
-                  })
+                          {sortedPeriods.map((period) => (
+                            <td
+                              key={period}
+                              className="px-3 md:px-6 py-4 text-sm text-gray-900"
+                            >
+                              {amountsByPeriod.get(period) ?? '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    });
+                  })()
                 ) : (
                   <tr>
                     <td
-                      colSpan={2}
+                      colSpan={(() => {
+                        const uniquePeriods = new Set<string>();
+                        if (shopAccountEntryResponse.data) {
+                          shopAccountEntryResponse.data.forEach((entry) => {
+                            uniquePeriods.add(`${entry.year}-${entry.month}`);
+                          });
+                        }
+                        return uniquePeriods.size + 1; // +1 for Account Title column
+                      })()}
                       className="px-3 md:px-6 py-4 text-center text-gray-500 text-sm"
                     >
                       No account titles available.
