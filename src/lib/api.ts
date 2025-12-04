@@ -214,9 +214,38 @@ export async function getShopAccountTitleList(
   token: string,
   shopId: number,
 ): Promise<ApiResponse<ShopAccountTitleResponse[]>> {
-  return get<ShopAccountTitleResponse[]>(`/shop/${shopId}/account_title`, {
+  const response = await get<ShopAccountTitleResponse[]>(`/shop/${shopId}/account_title`, {
     'Authorization': `Bearer ${token}`,
   });
+
+  // If the request was successful and we have data, sort it by type and order
+  if (response.data) {
+    // Group by type and sort by order within each group
+    const groupedByType = new Map<number, ShopAccountTitleResponse[]>();
+    
+    response.data.forEach(item => {
+      if (!groupedByType.has(item.type)) {
+        groupedByType.set(item.type, []);
+      }
+      groupedByType.get(item.type)!.push(item);
+    });
+
+    // Sort each group by order
+    groupedByType.forEach(items => {
+      items.sort((a, b) => a.order - b.order);
+    });
+
+    // Combine all groups back together, sorted by type
+    const sortedTypes = Array.from(groupedByType.keys()).sort((a, b) => a - b);
+    const sortedData: ShopAccountTitleResponse[] = [];
+    sortedTypes.forEach(type => {
+      sortedData.push(...groupedByType.get(type)!);
+    });
+
+    response.data = sortedData;
+  }
+
+  return response;
 }
 
 /**
