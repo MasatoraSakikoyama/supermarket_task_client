@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useShop, useShopAccountTitleList } from '@/lib/hooks';
-import { AccountPeriodTypeLabels } from '@/constants';
+import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
+import { AccountPeriodTypeLabels, DEFAULT_PAGE_SIZE } from '@/constants';
+import Pagination from '@/components/Pagination';
 
 export default function ShopsDetailPage() {
   const router = useRouter();
@@ -12,15 +14,24 @@ export default function ShopsDetailPage() {
   const params = useParams<{ id: string }>();
   const shopId = params.id ? parseInt(params.id, 10) : 0;
 
+  // Pagination state
+  const [offset, setOffset] = useState(0);
+  const [limit] = useState(DEFAULT_PAGE_SIZE);
+
   // Fetch data
   const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
     token,
     shopId
   );
 
-  const offset = 0;
-  const limit = 10;
   const { data: shopAccountTitleResponse, isLoading: isFetchingShopAccountTitle, error: fetchShopAccountTitleError } = useShopAccountTitleList(
+    token,
+    shopId,
+    0,
+    100, // Get all account titles for headers
+  );
+
+  const { data: shopAccountEntryResponse, isLoading: isFetchingShopAccountEntry, error: fetchShopAccountEntryError } = useShopAccountEntryList(
     token,
     shopId,
     offset,
@@ -39,7 +50,7 @@ export default function ShopsDetailPage() {
     );
   }
 
-  if (isFetchingShop || isFetchingShopAccountTitle) {
+  if (isFetchingShop || isFetchingShopAccountTitle || isFetchingShopAccountEntry) {
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
@@ -48,16 +59,32 @@ export default function ShopsDetailPage() {
     );
   }
 
-  if (fetchShopError || !shopResponse?.data || fetchShopAccountTitleError || !shopAccountTitleResponse) {
+  if (fetchShopError || !shopResponse?.data || fetchShopAccountTitleError || !shopAccountTitleResponse || fetchShopAccountEntryError || !shopAccountEntryResponse) {
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
         <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-          Error: {shopResponse?.error || 'Failed to fetch shop data'} {shopAccountTitleResponse?.error || 'Failed to fetch shop account title data'}
+          Error: {shopResponse?.error || 'Failed to fetch shop data'} {shopAccountTitleResponse?.error || 'Failed to fetch shop account title data'} {shopAccountEntryResponse?.error || 'Failed to fetch shop account entry data'}
         </div>
       </div>
     );
   }
+
+  // Pagination handlers
+  const handlePrevPage = () => {
+    if (offset >= limit) {
+      setOffset(offset - limit);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (shopAccountEntryResponse.data && shopAccountEntryResponse.data.length >= limit) {
+      setOffset(offset + limit);
+    }
+  };
+
+  const currentPage = Math.floor(offset / limit) + 1;
+  const hasMore = shopAccountEntryResponse.data ? shopAccountEntryResponse.data.length >= limit : false;
 
   return (
     <div className="py-4 md:py-8">
@@ -105,28 +132,82 @@ export default function ShopsDetailPage() {
       <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
         <div className="mb-4 md:mb-6">
           {/* Shop Account Titles Section */}
-          <h2 className="text-xl font-semibold mb-4">Shop Account Titles</h2>
+          <h2 className="text-xl font-semibold mb-4">Shop Account Entries</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Year
+                  </th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Month
+                  </th>
+                  {shopAccountTitleResponse.data && shopAccountTitleResponse.data.map((accountTitle) => (
+                    <th
+                      key={accountTitle.id}
+                      className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {accountTitle.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {shopAccountTitleResponse.data && shopAccountTitleResponse.data.length > 0 ? (
-                  shopAccountTitleResponse.data.map((accountTitle) => (
-                    <tr key={accountTitle.id}>
-                      <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
-                        {accountTitle.name}
-                      </td>
-                    </tr>
-                  ))
+                {shopAccountEntryResponse.data && shopAccountEntryResponse.data.length > 0 ? (
+                  // Group entries by year and month
+                  (() => {
+                    const grouped = new Map<string, Map<number, number>>();
+                    shopAccountEntryResponse.data.forEach((entry) => {
+                      const key = `${entry.year}-${entry.month}`;
+                      if (!grouped.has(key)) {
+                        grouped.set(key, new Map());
+                      }
+                      grouped.get(key)!.set(entry.shopp_account_title_id, entry.amount);
+                    });
+
+                    return Array.from(grouped.entries()).map(([key, amounts]) => {
+                      const [year, month] = key.split('-');
+                      return (
+                        <tr key={key}>
+                          <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
+                            {year}
+                          </td>
+                          <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
+                            {month}
+                          </td>
+                          {shopAccountTitleResponse.data?.map((accountTitle) => (
+                            <td
+                              key={accountTitle.id}
+                              className="px-3 md:px-6 py-4 text-sm text-gray-900"
+                            >
+                              {amounts.get(accountTitle.id) ?? '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    });
+                  })()
                 ) : (
                   <tr>
-                    <td className="px-3 md:px-6 py-4 text-center text-gray-500 text-sm">
-                      No account titles available.
+                    <td
+                      colSpan={(shopAccountTitleResponse.data?.length || 0) + 2}
+                      className="px-3 md:px-6 py-4 text-center text-gray-500 text-sm"
+                    >
+                      No account entries available.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={currentPage}
+            hasMore={hasMore}
+            loading={isFetchingShopAccountEntry}
+            onPrevious={handlePrevPage}
+            onNext={handleNextPage}
+          />
         </div>
       </div>
 
