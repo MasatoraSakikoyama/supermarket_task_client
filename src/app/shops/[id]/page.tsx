@@ -7,6 +7,7 @@ import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib
 import { AccountPeriodTypeLabels, DEFAULT_PAGE_SIZE } from '@/constants';
 import Pagination from '@/components/Pagination';
 import Table, { Column } from '@/components/Table';
+import MessageDisplay from '@/components/MessageDisplay';
 import { ShopAccountTitleResponse } from '@/type/api';
 
 export default function ShopsDetailPage() {
@@ -53,37 +54,45 @@ export default function ShopsDetailPage() {
   const BORDER_RIGHT_HEADER_CLASS = 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200';
   const BORDER_RIGHT_CELL_CLASS = 'px-3 md:px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200';
 
+  // Determine message to display
+  let messageType: 'error' | 'loading' | null = null;
+  let messageText = '';
 
   if (!shopId) {
+    messageType = 'error';
+    messageText = 'Error: No shop ID provided';
+  } else if (isFetchingShop || isFetchingShopAccountTitle || isFetchingShopAccountEntry) {
+    messageType = 'loading';
+    messageText = 'Loading shop data...';
+  } else if (fetchShopError || !shopResponse?.data || fetchShopAccountTitleError || !shopAccountTitleResponse || fetchShopAccountEntryError || !shopAccountEntryResponse) {
+    messageType = 'error';
+    const errors = [];
+    if (fetchShopError || !shopResponse?.data) {
+      errors.push(shopResponse?.error || 'Failed to fetch shop data');
+    }
+    if (fetchShopAccountTitleError || !shopAccountTitleResponse) {
+      errors.push(shopAccountTitleResponse?.error || 'Failed to fetch shop account title data');
+    }
+    if (fetchShopAccountEntryError || !shopAccountEntryResponse) {
+      errors.push(shopAccountEntryResponse?.error || 'Failed to fetch shop account entry data');
+    }
+    messageText = errors.length > 0 ? `Error: ${errors.join('. ')}` : 'Error: Failed to load data';
+  }
+
+  // Show message if there's an error or loading state
+  if (messageType) {
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
-        <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-          Error: No shop ID provided
-        </div>
+        <MessageDisplay type={messageType} message={messageText} />
       </div>
     );
   }
 
-  if (isFetchingShop || isFetchingShopAccountTitle || isFetchingShopAccountEntry) {
-    return (
-      <div className="py-4 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
-        <div className="text-gray-600">Loading shop data...</div>
-      </div>
-    );
-  }
-
-  if (fetchShopError || !shopResponse?.data || fetchShopAccountTitleError || !shopAccountTitleResponse || fetchShopAccountEntryError || !shopAccountEntryResponse) {
-    return (
-      <div className="py-4 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
-        <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-          Error: {shopResponse?.error || 'Failed to fetch shop data'} {shopAccountTitleResponse?.error || 'Failed to fetch shop account title data'} {shopAccountEntryResponse?.error || 'Failed to fetch shop account entry data'}
-        </div>
-      </div>
-    );
-  }
+  // At this point, all data is guaranteed to be loaded
+  const shop = shopResponse!.data!;
+  const shopAccountTitles = shopAccountTitleResponse!.data || [];
+  const shopAccountEntries = shopAccountEntryResponse!;
 
   // Pagination handlers
   const handlePrevPage = () => {
@@ -93,13 +102,13 @@ export default function ShopsDetailPage() {
   };
 
   const handleNextPage = () => {
-    if (shopAccountEntryResponse.data && shopAccountEntryResponse.data.length >= limit) {
+    if (shopAccountEntries.data && shopAccountEntries.data.length >= limit) {
       setOffset(offset + limit);
     }
   };
 
   const currentPage = Math.floor(offset / limit) + 1;
-  const hasMore = shopAccountEntryResponse.data ? shopAccountEntryResponse.data.length >= limit : false;
+  const hasMore = shopAccountEntries.data ? shopAccountEntries.data.length >= limit : false;
 
   return (
     <div className="py-4 md:py-8">
@@ -114,7 +123,7 @@ export default function ShopsDetailPage() {
             id="name"
             className="w-full px-3 py-2 text-gray-700 text-sm md:text-base"
           >
-            {shopResponse.data.name}
+            {shop.name}
           </div>
         </div>
 
@@ -126,7 +135,7 @@ export default function ShopsDetailPage() {
             id="period_type"
             className="w-full px-3 py-2 text-gray-700 text-sm md:text-base"
           >
-            {AccountPeriodTypeLabels[shopResponse.data.period_type]}
+            {AccountPeriodTypeLabels[shop.period_type]}
           </div>
         </div>
 
@@ -135,7 +144,7 @@ export default function ShopsDetailPage() {
             <input
               type="checkbox"
               name="is_cumulative"
-              checked={shopResponse.data.is_cumulative}
+              checked={shop.is_cumulative}
               className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               disabled
             />
@@ -164,7 +173,7 @@ export default function ShopsDetailPage() {
                     cellClassName: BORDER_RIGHT_CELL_CLASS,
                   },
                 ]}
-                data={shopAccountTitleResponse.data || []}
+                data={shopAccountTitles}
                 loading={isFetchingShopAccountTitle}
                 emptyMessage="No account titles available."
                 getRowKey={(item) => item.id}
@@ -182,7 +191,7 @@ export default function ShopsDetailPage() {
                     header: `${year}/${month}`,
                     render: (item: ShopAccountTitleResponse) => {
                       // Find the amount for this account title and period
-                      const entry = shopAccountEntryResponse.data?.find(
+                      const entry = shopAccountEntries.data?.find(
                         (e) =>
                           e.shopp_account_title_id === item.id &&
                           `${e.year}-${e.month}` === period
@@ -191,7 +200,7 @@ export default function ShopsDetailPage() {
                     },
                   } as Column<ShopAccountTitleResponse>;
                 })}
-                data={shopAccountTitleResponse.data || []}
+                data={shopAccountTitles}
                 loading={isFetchingShopAccountTitle}
                 emptyMessage="No entries available."
                 getRowKey={(item) => item.id}

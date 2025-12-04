@@ -2,7 +2,7 @@
  * TanStack Query hooks for API calls
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   authLogin,
   authLogout,
@@ -115,6 +115,7 @@ export function useShops(
       return getShops(token, offset, limit);
     },
     enabled: enabled && !!token,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -199,6 +200,7 @@ export function useShopAccountTitleList(
       return getShopAccountTitleList(token, shopId);
     },
     enabled: !!token && shopId > 0,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -304,6 +306,7 @@ export function useShopAccountEntryList(
       return getShopAccountEntryList(token, shopId, offset, limit);
     },
     enabled: !!token && shopId > 0,
+    placeholderData: keepPreviousData,
   });
 }
 
