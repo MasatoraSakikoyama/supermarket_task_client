@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
@@ -19,6 +19,7 @@ export default function ShopsDetailPage() {
   // Pagination state
   const [offset, setOffset] = useState(0);
   const [limit] = useState(DEFAULT_PAGE_SIZE);
+  const scrollPositionRef = useRef<number>(0);
 
   // Fetch data
   const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
@@ -55,6 +56,14 @@ export default function ShopsDetailPage() {
   const BORDER_RIGHT_HEADER_CLASS = 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200';
   const BORDER_RIGHT_CELL_CLASS = 'px-3 md:px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200';
 
+  // Restore scroll position after pagination
+  useEffect(() => {
+    if (scrollPositionRef.current > 0) {
+      window.scrollTo(0, scrollPositionRef.current);
+      scrollPositionRef.current = 0;
+    }
+  }, [offset]);
+
 
   if (!shopId) {
     return (
@@ -90,12 +99,14 @@ export default function ShopsDetailPage() {
   // Pagination handlers
   const handlePrevPage = () => {
     if (offset >= limit) {
+      scrollPositionRef.current = window.scrollY;
       setOffset(offset - limit);
     }
   };
 
   const handleNextPage = () => {
     if (shopAccountEntryResponse.data && shopAccountEntryResponse.data.length >= limit) {
+      scrollPositionRef.current = window.scrollY;
       setOffset(offset + limit);
     }
   };

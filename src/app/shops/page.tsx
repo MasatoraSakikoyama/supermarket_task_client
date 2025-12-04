@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShopResponse } from '@/lib/type';
@@ -15,6 +15,7 @@ export default function ShopsPage() {
   const [limit] = useState(DEFAULT_PAGE_SIZE);
   const { getToken } = useAuth();
   const token = getToken();
+  const scrollPositionRef = useRef<number>(0);
 
   // Use TanStack Query hook for fetching shops
   const { data: response, isLoading, error } = useShops(token, offset, limit, !!token);
@@ -22,14 +23,24 @@ export default function ShopsPage() {
   const shops = response?.data || [];
   const hasMore = shops.length >= limit;
 
+  // Restore scroll position after pagination
+  useEffect(() => {
+    if (scrollPositionRef.current > 0) {
+      window.scrollTo(0, scrollPositionRef.current);
+      scrollPositionRef.current = 0;
+    }
+  }, [offset]);
+
   const handlePrevPage = () => {
     if (offset >= limit) {
+      scrollPositionRef.current = window.scrollY;
       setOffset(offset - limit);
     }
   };
 
   const handleNextPage = () => {
     if (hasMore) {
+      scrollPositionRef.current = window.scrollY;
       setOffset(offset + limit);
     }
   };

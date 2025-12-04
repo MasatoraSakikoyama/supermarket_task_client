@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useGet } from '@/lib/hooks';
 import Table, { Column } from '@/components/Table';
 import Pagination from '@/components/Pagination';
@@ -17,6 +17,7 @@ export default function SummaryPage() {
   const [shouldFetch, setShouldFetch] = useState(false);
   const [offset, setOffset] = useState(0);
   const [limit] = useState(DEFAULT_PAGE_SIZE);
+  const scrollPositionRef = useRef<number>(0);
 
   // Use TanStack Query hook for fetching data
   const { data: response, isLoading, refetch } = useGet<SummaryData[]>('/api/summary', shouldFetch);
@@ -30,14 +31,24 @@ export default function SummaryPage() {
     refetch();
   };
 
+  // Restore scroll position after pagination
+  useEffect(() => {
+    if (scrollPositionRef.current > 0) {
+      window.scrollTo(0, scrollPositionRef.current);
+      scrollPositionRef.current = 0;
+    }
+  }, [offset]);
+
   const handlePrevPage = () => {
     if (offset >= limit) {
+      scrollPositionRef.current = window.scrollY;
       setOffset(offset - limit);
     }
   };
 
   const handleNextPage = () => {
     if (offset + limit < allData.length) {
+      scrollPositionRef.current = window.scrollY;
       setOffset(offset + limit);
     }
   };
