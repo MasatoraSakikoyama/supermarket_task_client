@@ -111,6 +111,11 @@ export interface ShopAccountTitleResponse {
   updated_at: string;
 }
 
+export interface ShopAccountTitleListResponse {
+  revenues: ShopAccountTitleResponse[];
+  expenses: ShopAccountTitleResponse[];
+}
+
 // =============================================================================
 // Shop Account Entry Types
 // =============================================================================

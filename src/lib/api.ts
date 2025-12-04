@@ -20,6 +20,7 @@ import {
   ShopAccountTitleCreate,
   ShopAccountTitleUpdate,
   ShopAccountTitleResponse,
+  ShopAccountTitleListResponse,
 } from '@/type/api';
 
 /**
@@ -213,8 +214,8 @@ export async function deleteShop(token: string, shopId: number): Promise<ApiResp
 export async function getShopAccountTitleList(
   token: string,
   shopId: number,
-): Promise<ApiResponse<ShopAccountTitleResponse[]>> {
-  return get<ShopAccountTitleResponse[]>(`/shop/${shopId}/account_title`, {
+): Promise<ApiResponse<ShopAccountTitleListResponse>> {
+  return get<ShopAccountTitleListResponse>(`/shop/${shopId}/account_title`, {
     'Authorization': `Bearer ${token}`,
   });
 }
