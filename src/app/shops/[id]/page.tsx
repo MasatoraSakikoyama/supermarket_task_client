@@ -138,63 +138,73 @@ export default function ShopsDetailPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Year
+                    Account Title
                   </th>
-                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Month
-                  </th>
-                  {shopAccountTitleResponse.data && shopAccountTitleResponse.data.map((accountTitle) => (
-                    <th
-                      key={accountTitle.id}
-                      className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {accountTitle.name}
-                    </th>
-                  ))}
+                  {shopAccountEntryResponse.data && (() => {
+                    // Get unique year/month combinations
+                    const uniquePeriods = new Set<string>();
+                    shopAccountEntryResponse.data.forEach((entry) => {
+                      uniquePeriods.add(`${entry.year}-${entry.month}`);
+                    });
+                    return Array.from(uniquePeriods).sort().map((period) => {
+                      const [year, month] = period.split('-');
+                      return (
+                        <th
+                          key={period}
+                          className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          {year}/{month}
+                        </th>
+                      );
+                    });
+                  })()}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {shopAccountEntryResponse.data && shopAccountEntryResponse.data.length > 0 ? (
-                  // Group entries by year and month
-                  (() => {
-                    const grouped = new Map<string, Map<number, number>>();
-                    shopAccountEntryResponse.data.forEach((entry) => {
-                      const key = `${entry.year}-${entry.month}`;
-                      if (!grouped.has(key)) {
-                        grouped.set(key, new Map());
-                      }
-                      grouped.get(key)!.set(entry.shopp_account_title_id, entry.amount);
-                    });
+                {shopAccountTitleResponse.data && shopAccountTitleResponse.data.length > 0 ? (
+                  shopAccountTitleResponse.data.map((accountTitle) => {
+                    // Create a map of year-month to amount for this account title
+                    const amountsByPeriod = new Map<string, number>();
+                    if (shopAccountEntryResponse.data) {
+                      shopAccountEntryResponse.data.forEach((entry) => {
+                        if (entry.shopp_account_title_id === accountTitle.id) {
+                          const key = `${entry.year}-${entry.month}`;
+                          amountsByPeriod.set(key, entry.amount);
+                        }
+                      });
+                    }
 
-                    return Array.from(grouped.entries()).map(([key, amounts]) => {
-                      const [year, month] = key.split('-');
-                      return (
-                        <tr key={key}>
-                          <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
-                            {year}
+                    // Get unique periods for this row
+                    const uniquePeriods = new Set<string>();
+                    if (shopAccountEntryResponse.data) {
+                      shopAccountEntryResponse.data.forEach((entry) => {
+                        uniquePeriods.add(`${entry.year}-${entry.month}`);
+                      });
+                    }
+
+                    return (
+                      <tr key={accountTitle.id}>
+                        <td className="px-3 md:px-6 py-4 text-sm font-medium text-gray-900">
+                          {accountTitle.name}
+                        </td>
+                        {Array.from(uniquePeriods).sort().map((period) => (
+                          <td
+                            key={period}
+                            className="px-3 md:px-6 py-4 text-sm text-gray-900"
+                          >
+                            {amountsByPeriod.get(period) ?? '-'}
                           </td>
-                          <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
-                            {month}
-                          </td>
-                          {shopAccountTitleResponse.data?.map((accountTitle) => (
-                            <td
-                              key={accountTitle.id}
-                              className="px-3 md:px-6 py-4 text-sm text-gray-900"
-                            >
-                              {amounts.get(accountTitle.id) ?? '-'}
-                            </td>
-                          ))}
-                        </tr>
-                      );
-                    });
-                  })()
+                        ))}
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td
-                      colSpan={(shopAccountTitleResponse.data?.length || 0) + 2}
+                      colSpan={2}
                       className="px-3 md:px-6 py-4 text-center text-gray-500 text-sm"
                     >
-                      No account entries available.
+                      No account titles available.
                     </td>
                   </tr>
                 )}
