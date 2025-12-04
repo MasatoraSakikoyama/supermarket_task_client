@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useShop, useShopAccountTitleList } from '@/lib/hooks';
-import { AccountPeriodType, AccountPeriodTypeLabels } from '@/constants';
+import { AccountPeriodTypeLabels } from '@/constants';
 
 export default function ShopsDetailPage() {
   const router = useRouter();
@@ -18,8 +18,8 @@ export default function ShopsDetailPage() {
     shopId
   );
 
-  let offset = 0;
-  let limit = 10;
+  const offset = 0;
+  const limit = 10;
   const { data: shopAccountTitleResponse, isLoading: isFetchingShopAccountTitle, error: fetchShopAccountTitleError } = useShopAccountTitleList(
     token,
     shopId,
@@ -70,7 +70,6 @@ export default function ShopsDetailPage() {
           </label>
           <div
             id="name"
-            name="name"
             className="w-full px-3 py-2 text-gray-700 text-sm md:text-base"
           >
             {shopResponse.data.name}
@@ -83,7 +82,6 @@ export default function ShopsDetailPage() {
           </label>
           <div
             id="period_type"
-            name="period_type"
             className="w-full px-3 py-2 text-gray-700 text-sm md:text-base"
           >
             {AccountPeriodTypeLabels[shopResponse.data.period_type]}
@@ -106,7 +104,29 @@ export default function ShopsDetailPage() {
 
       <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
         <div className="mb-4 md:mb-6">
-            <!-- Shop Account Titles Section -->
+          {/* Shop Account Titles Section */}
+          <h2 className="text-xl font-semibold mb-4">Shop Account Titles</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-200">
+                {shopAccountTitleResponse?.data && shopAccountTitleResponse.data.length > 0 ? (
+                  shopAccountTitleResponse.data.map((accountTitle) => (
+                    <tr key={accountTitle.id}>
+                      <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
+                        {accountTitle.name}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td className="px-3 md:px-6 py-4 text-center text-gray-500 text-sm">
+                      No account titles available.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

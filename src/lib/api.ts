@@ -17,6 +17,9 @@ import {
   ShopAccountEntryCreate,
   ShopAccountEntryUpdate,
   ShopAccountEntryResponse,
+  ShopAccountTitleCreate,
+  ShopAccountTitleUpdate,
+  ShopAccountTitleResponse,
 } from '@/type/api';
 
 /**

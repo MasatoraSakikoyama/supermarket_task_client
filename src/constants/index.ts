@@ -21,7 +21,7 @@ export const AccountPeriodTypeLabels: Record<AccountPeriodType, string> = {
 };
 
 export enum AccountTitleType {
-    Revenue = 1
+    Revenue = 1,
     Expense = 2
 }
 
@@ -31,12 +31,12 @@ export const AccountTitleTypeLabels: Record<AccountTitleType, string> = {
 }
 
 export enum AccountTitleSubType {
-    Sales = 1
-    NonOperatingRevenue = 2 
-    ExtraordinaryIncome = 3
-    CostOfGoodsSold = 100
-    SellingGeneralAdministrativeExpense = 101
-    NonOperatingExpense = 102
+    Sales = 1,
+    NonOperatingRevenue = 2,
+    ExtraordinaryIncome = 3,
+    CostOfGoodsSold = 100,
+    SellingGeneralAdministrativeExpense = 101,
+    NonOperatingExpense = 102,
     ExtraordinaryLoss = 103
 }
 
