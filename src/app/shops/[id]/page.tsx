@@ -48,7 +48,7 @@ export default function ShopsDetailPage() {
     );
   }
 
-  if (fetchShopError || !shopResponse?.data || fetchShopAccountTitleError || !shopAccountTitleResponse?.data) {
+  if (fetchShopError || !shopResponse?.data || fetchShopAccountTitleError || !shopAccountTitleResponse) {
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
@@ -109,7 +109,7 @@ export default function ShopsDetailPage() {
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <tbody className="bg-white divide-y divide-gray-200">
-                {shopAccountTitleResponse?.data && shopAccountTitleResponse.data.length > 0 ? (
+                {shopAccountTitleResponse.data && shopAccountTitleResponse.data.length > 0 ? (
                   shopAccountTitleResponse.data.map((accountTitle) => (
                     <tr key={accountTitle.id}>
                       <td className="px-3 md:px-6 py-4 text-sm text-gray-900">
