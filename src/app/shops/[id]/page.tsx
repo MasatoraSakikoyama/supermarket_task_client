@@ -64,7 +64,6 @@ export default function ShopsDetailPage() {
     }
   }, [offset]);
 
-
   if (!shopId) {
     return (
       <div className="py-4 md:py-8">
