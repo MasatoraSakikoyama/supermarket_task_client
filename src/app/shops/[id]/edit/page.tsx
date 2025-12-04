@@ -98,29 +98,27 @@ export default function ShopsEditPage() {
     }
   };
 
+  // Determine message to display for loading/error states
+  let pageMessageType: 'error' | 'loading' | null = null;
+  let pageMessageText = '';
+
   if (!shopId) {
-    return (
-      <div className="py-4 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
-        <MessageDisplay type="error" message="Error: No shop ID provided" />
-      </div>
-    );
+    pageMessageType = 'error';
+    pageMessageText = 'Error: No shop ID provided';
+  } else if (isFetching) {
+    pageMessageType = 'loading';
+    pageMessageText = 'Loading shop data...';
+  } else if (fetchError || !shopResponse?.data) {
+    pageMessageType = 'error';
+    pageMessageText = `Error: ${shopResponse?.error || 'Failed to fetch shop data'}`;
   }
 
-  if (isFetching) {
+  // Show loading/error message if applicable
+  if (pageMessageType) {
     return (
       <div className="py-4 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
-        <MessageDisplay type="loading" message="Loading shop data..." />
-      </div>
-    );
-  }
-
-  if (fetchError || !shopResponse?.data) {
-    return (
-      <div className="py-4 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
-        <MessageDisplay type="error" message={`Error: ${shopResponse?.error || 'Failed to fetch shop data'}`} />
+        <MessageDisplay type={pageMessageType} message={pageMessageText} />
       </div>
     );
   }

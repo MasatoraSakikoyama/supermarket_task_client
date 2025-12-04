@@ -200,6 +200,7 @@ export function useShopAccountTitleList(
       return getShopAccountTitleList(token, shopId);
     },
     enabled: !!token && shopId > 0,
+    placeholderData: keepPreviousData,
   });
 }
 
