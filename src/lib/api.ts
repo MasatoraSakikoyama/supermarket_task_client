@@ -224,10 +224,12 @@ export async function getShopAccountTitleList(
     const groupedByType = new Map<number, ShopAccountTitleResponse[]>();
     
     response.data.forEach(item => {
-      if (!groupedByType.has(item.type)) {
-        groupedByType.set(item.type, []);
+      const group = groupedByType.get(item.type);
+      if (group) {
+        group.push(item);
+      } else {
+        groupedByType.set(item.type, [item]);
       }
-      groupedByType.get(item.type)!.push(item);
     });
 
     // Sort each group by order
@@ -239,7 +241,10 @@ export async function getShopAccountTitleList(
     const sortedTypes = Array.from(groupedByType.keys()).sort((a, b) => a - b);
     const sortedData: ShopAccountTitleResponse[] = [];
     sortedTypes.forEach(type => {
-      sortedData.push(...groupedByType.get(type)!);
+      const group = groupedByType.get(type);
+      if (group) {
+        sortedData.push(...group);
+      }
     });
 
     response.data = sortedData;
