@@ -18,6 +18,11 @@ import {
   createShopAccountEntry,
   updateShopAccountEntry,
   deleteShopAccountEntry,
+  getShopAccountTitleList,
+  getShopAccountTitle,
+  createShopAccountTitle,
+  updateShopAccountTitle,
+  deleteShopAccountTitle,
   get,
   post,
   put,
@@ -30,6 +35,8 @@ import {
   ShopUpdate,
   ShopAccountEntryCreate,
   ShopAccountEntryUpdate,
+  ShopAccountTitleCreate,
+  ShopAccountTitleUpdate,
 } from '@/type/api';
 
 // =============================================================================
@@ -96,7 +103,7 @@ export function useAuthMe(token: string | null) {
 export function useShops(
   token: string | null,
   offset: number = 0,
-  limit: number = 100,
+  limit: number = 10,
   enabled: boolean = true
 ) {
   return useQuery({
@@ -114,7 +121,7 @@ export function useShops(
 /**
  * Hook for getting a single shop
  */
-export function useShop(token: string | null, shopId: number, enabled: boolean = true) {
+export function useShop(token: string | null, shopId: number) {
   return useQuery({
     queryKey: ['shop', shopId],
     queryFn: () => {
@@ -123,7 +130,7 @@ export function useShop(token: string | null, shopId: number, enabled: boolean =
       }
       return getShop(token, shopId);
     },
-    enabled: enabled && !!token && shopId > 0,
+    enabled: !!token && shopId > 0,
   });
 }
 
@@ -173,108 +180,211 @@ export function useDeleteShop() {
 }
 
 // =============================================================================
-// Shop AccountData Hooks
+// Shop AccountTitle Hooks
 // =============================================================================
 
 /**
- * Hook for getting all account data for a shop with pagination
+ * Hook for getting all account title for a shop with pagination
  */
-export function useShopAccountDataList(
+export function useShopAccountTitleList(
   token: string | null,
   shopId: number,
   offset: number = 0,
-  limit: number = 100,
-  enabled: boolean = true
+  limit: number = 10,
 ) {
   return useQuery({
-    queryKey: ['shop', shopId, 'account_data', offset, limit],
+    queryKey: ['shop', shopId, 'account_title', offset, limit],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No token provided');
+      }
+      return getShopAccountTitleList(token, shopId, offset, limit);
+    },
+    enabled: !!token && shopId > 0,
+  });
+}
+
+/**
+ * Hook for getting a single account title by ID
+ */
+export function useShopAccountTitle(
+  token: string | null,
+  shopId: number,
+  accountTitleId: number,
+) {
+  return useQuery({
+    queryKey: ['shop', shopId, 'account_title', accountTitleId],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No token provided');
+      }
+      return getShopAccountTitle(token, shopId, accountTitleId);
+    },
+    enabled: !!token && shopId > 0 && accountTitleId > 0,
+  });
+}
+
+/**
+ * Hook for creating a account title
+ */
+export function useCreateShopAccountTitle() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopAccountTitleCreate }) =>
+      createShopAccountTitle(token, shopId, data),
+    onSuccess: (_, variables) => {
+      // Invalidate account data list on create
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_title'] });
+    },
+  });
+}
+
+/**
+ * Hook for updating a account title
+ */
+export function useUpdateShopAccountTitle() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      token,
+      shopId,
+      accountTitleId,
+      data,
+    }: {
+      token: string;
+      shopId: number;
+      accountTitleId: number;
+      data: ShopAccountTitleUpdate;
+    }) => updateShopAccountTitle(token, shopId, accountTitleId, data),
+    onSuccess: (_, variables) => {
+      // Invalidate specific account data and account data list on update
+      queryClient.invalidateQueries({
+        queryKey: ['shop', variables.shopId, 'account_title', variables.accountTitleId],
+      });
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_title'] });
+    },
+  });
+}
+
+/**
+ * Hook for deleting a account title
+ */
+export function useDeleteShopAccountTitle() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ token, shopId, accountTitleId }: { token: string; shopId: number; accountTitleId: number }) =>
+      deleteShopAccountTitle(token, shopId, accountTitleId),
+    onSuccess: (_, variables) => {
+      // Invalidate specific account data and account data list on delete
+      queryClient.invalidateQueries({
+        queryKey: ['shop', variables.shopId, 'account_title', variables.accountTitleId],
+      });
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_title'] });
+    },
+  });
+}
+
+// =============================================================================
+// Shop AccountEntry Hooks
+// =============================================================================
+
+/**
+ * Hook for getting all account entry for a shop with pagination
+ */
+export function useShopAccountEntryList(
+  token: string | null,
+  shopId: number,
+  offset: number = 0,
+  limit: number = 10,
+) {
+  return useQuery({
+    queryKey: ['shop', shopId, 'account_entry', offset, limit],
     queryFn: () => {
       if (!token) {
         throw new Error('No token provided');
       }
       return getShopAccountEntryList(token, shopId, offset, limit);
     },
-    enabled: enabled && !!token && shopId > 0,
+    enabled: !!token && shopId > 0,
   });
 }
 
 /**
- * Hook for getting a single account data by ID
+ * Hook for getting a single account entry by ID
  */
-export function useShopAccountData(
+export function useShopAccountEntry(
   token: string | null,
   shopId: number,
-  accountDataId: number,
-  enabled: boolean = true
+  accountEntryId: number,
 ) {
   return useQuery({
-    queryKey: ['shop', shopId, 'account_data', accountDataId],
+    queryKey: ['shop', shopId, 'account_entry', accountEntryId],
     queryFn: () => {
       if (!token) {
         throw new Error('No token provided');
       }
-      return getShopAccountEntry(token, shopId, accountDataId);
+      return getShopAccountEntry(token, shopId, accountEntryId);
     },
-    enabled: enabled && !!token && shopId > 0 && accountDataId > 0,
+    enabled: !!token && shopId > 0 && accountEntryId > 0,
   });
 }
 
 /**
- * Hook for creating a account data
+ * Hook for creating a account entry
  */
-export function useCreateShopAccountData() {
+export function useCreateShopAccountEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopAccountEntryCreate }) =>
       createShopAccountEntry(token, shopId, data),
     onSuccess: (_, variables) => {
-      // Invalidate account data list on create
-      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_data'] });
+      // Invalidate account entry list on create
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_entry'] });
     },
   });
 }
 
 /**
- * Hook for updating a account data
+ * Hook for updating a account entry
  */
-export function useUpdateShopAccountData() {
+export function useUpdateShopAccountEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       token,
       shopId,
-      accountDataId,
+      accountEntryId,
       data,
     }: {
       token: string;
       shopId: number;
-      accountDataId: number;
+      accountEntryId: number;
       data: ShopAccountEntryUpdate;
-    }) => updateShopAccountEntry(token, shopId, accountDataId, data),
+    }) => updateShopAccountEntry(token, shopId, accountEntryId, data),
     onSuccess: (_, variables) => {
-      // Invalidate specific account data and account data list on update
+      // Invalidate specific account entry and account entry list on update
       queryClient.invalidateQueries({
-        queryKey: ['shop', variables.shopId, 'account_data', variables.accountDataId],
+        queryKey: ['shop', variables.shopId, 'account_entry', variables.accountEntryId],
       });
-      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_data'] });
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_entry'] });
     },
   });
 }
 
 /**
- * Hook for deleting a account data
+ * Hook for deleting a account entry
  */
-export function useDeleteShopAccountData() {
+export function useDeleteShopAccountEntry() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ token, shopId, accountDataId }: { token: string; shopId: number; accountDataId: number }) =>
-      deleteShopAccountEntry(token, shopId, accountDataId),
+    mutationFn: ({ token, shopId, accountEntryId }: { token: string; shopId: number; accountEntryId: number }) =>
+      deleteShopAccountEntry(token, shopId, accountEntryId),
     onSuccess: (_, variables) => {
-      // Invalidate specific account data and account data list on delete
+      // Invalidate specific account entry and account entry list on delete
       queryClient.invalidateQueries({
-        queryKey: ['shop', variables.shopId, 'account_data', variables.accountDataId],
+        queryKey: ['shop', variables.shopId, 'account_entry', variables.accountEntryId],
       });
-      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_data'] });
+      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_entry'] });
     },
   });
 }

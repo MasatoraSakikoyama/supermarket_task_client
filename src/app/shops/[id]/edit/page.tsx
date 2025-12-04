@@ -1,28 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useShop, useUpdateShop } from '@/lib/hooks';
 import { AccountPeriodType, AccountPeriodTypeLabels } from '@/constants';
 
 interface FormData {
   name: string;
-  description: string;
   period_type: AccountPeriodType;
   is_cumulative: boolean;
 }
 
 export default function ShopsEditPage() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const shopId = searchParams.get('id');
   const { getToken } = useAuth();
   const token = getToken();
+  const params = useParams<{ id: string }>();
+  const shopId = params.id ? parseInt(params.id, 10) : 0;
+
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
-    description: '',
     period_type: AccountPeriodType.Monthly,
     is_cumulative: false,
   });
@@ -31,8 +30,7 @@ export default function ShopsEditPage() {
   // Fetch shop data
   const { data: shopResponse, isLoading: isFetching, error: fetchError } = useShop(
     token,
-    shopId ? parseInt(shopId, 10) : 0,
-    !!token && !!shopId
+    shopId
   );
 
   // Update shop mutation
@@ -45,7 +43,6 @@ export default function ShopsEditPage() {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- Valid use case: syncing external API data to form state
       setFormData({
         name: shop.name,
-        description: shop.description || '',
         period_type: shop.period_type,
         is_cumulative: shop.is_cumulative,
       });
@@ -77,10 +74,9 @@ export default function ShopsEditPage() {
     try {
       const result = await updateMutation.mutateAsync({
         token,
-        shopId: parseInt(shopId, 10),
+        shopId,
         data: {
           name: formData.name,
-          description: formData.description,
           period_type: formData.period_type,
           is_cumulative: formData.is_cumulative,
         },
@@ -92,7 +88,7 @@ export default function ShopsEditPage() {
         setMessage({ type: 'success', text: 'Shop updated successfully!' });
         // Optionally navigate back to shops list after a delay
         setTimeout(() => {
-          router.push('/shops');
+          router.push(`/shops/${shopId}`);
         }, 1500);
       }
     } catch (error) {
@@ -104,7 +100,7 @@ export default function ShopsEditPage() {
   if (!shopId) {
     return (
       <div className="py-4 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Edit Shop</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
         <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           Error: No shop ID provided
         </div>
@@ -115,7 +111,7 @@ export default function ShopsEditPage() {
   if (isFetching) {
     return (
       <div className="py-4 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Edit Shop</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
         <div className="text-gray-600">Loading shop data...</div>
       </div>
     );
@@ -124,7 +120,7 @@ export default function ShopsEditPage() {
   if (fetchError || !shopResponse?.data) {
     return (
       <div className="py-4 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Edit Shop</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
         <div className="mb-4 md:mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           Error: {shopResponse?.error || 'Failed to fetch shop data'}
         </div>
@@ -134,10 +130,7 @@ export default function ShopsEditPage() {
 
   return (
     <div className="py-4 md:py-8">
-      <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Edit Shop</h1>
-      <p className="text-gray-600 mb-4 md:mb-6 text-sm md:text-base">
-        Update shop information. Modify the form below and submit to update the shop.
-      </p>
+      <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
 
       {message && (
         <div
@@ -151,86 +144,81 @@ export default function ShopsEditPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="max-w-full md:max-w-md bg-white shadow rounded-lg p-4 md:p-6">
-        <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-            placeholder="Enter shop name"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-            placeholder="Enter shop description"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="period_type" className="block text-sm font-medium text-gray-700 mb-1">
-            Period Type
-          </label>
-          <select
-            id="period_type"
-            name="period_type"
-            value={formData.period_type}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-          >
-            {Object.entries(AccountPeriodTypeLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-4 md:mb-6">
-          <label className="flex items-center">
+      <form onSubmit={handleSubmit} className="w-full">
+        <div className="w-full bg-white shadow rounded-lg p-4">
+          <div className="mb-4">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              Name
+            </label>
             <input
-              type="checkbox"
-              name="is_cumulative"
-              checked={formData.is_cumulative}
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
               onChange={handleChange}
-              className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
+              placeholder="Enter shop name"
             />
-            <span className="text-sm font-medium text-gray-700">Is Cumulative</span>
-          </label>
-        </div>
+          </div>
 
-        <div className="flex space-x-4">
-          <button
-            type="submit"
-            disabled={updateMutation.isPending}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
-          >
-            {updateMutation.isPending ? 'Updating...' : 'Update Shop'}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push('/shops')}
-            className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm md:text-base"
-          >
-            Cancel
-          </button>
+          <div className="mb-4">
+            <label htmlFor="period_type" className="block text-sm font-medium text-gray-700 mb-1">
+              Period Type
+            </label>
+            <select
+              id="period_type"
+              name="period_type"
+              value={formData.period_type}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
+            >
+              {Object.entries(AccountPeriodTypeLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                name="is_cumulative"
+                checked={formData.is_cumulative}
+                onChange={handleChange}
+                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="text-sm font-medium text-gray-700">Is Cumulative</span>
+            </label>
+          </div>
+        </div>
+        
+        <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
+          <div className="mb-4">
+
+          </div>
+        </div>
+        
+        <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
+          <div className="flex space-x-4">
+            <button
+              type="submit"
+              disabled={updateMutation.isPending}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
+            >
+              {updateMutation.isPending ? 'Updating...' : 'Update'}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(`/shops/${shopId}`)}
+              className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm md:text-base"
+            >
+              Back
+            </button>
+          </div>
         </div>
       </form>
     </div>

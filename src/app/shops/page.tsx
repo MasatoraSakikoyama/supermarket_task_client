@@ -75,24 +75,14 @@ export default function ShopsPage() {
         key: '',
         header: 'Actions',
         render: (shop) => (
-          <div className="flex space-x-4">
-            <button
-              className="text-blue-600 hover:underline"
-              onClick={() => {
-                router.push(`/shops/edit?id=${shop.id}`);
-              }}
-            >
-              Edit
-            </button>
-            <button
-              className="text-red-600 hover:underline"
-              onClick={() => {
-                // Handle delete action
-              }}
-            >
-              Delete
-            </button>
-          </div>
+          <button
+            className="text-blue-600 hover:underline"
+            onClick={() => {
+              router.push(`/shops/${shop.id}`);
+            }}
+          >
+            detail
+          </button>
         ),
       },
     ],

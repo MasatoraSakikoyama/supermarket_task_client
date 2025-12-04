@@ -19,3 +19,33 @@ export const AccountPeriodTypeLabels: Record<AccountPeriodType, string> = {
   [AccountPeriodType.SemiAnnual]: '半期',
   [AccountPeriodType.Yearly]: '年次',
 };
+
+export enum AccountTitleType {
+    Revenue = 1
+    Expense = 2
+}
+
+export const AccountTitleTypeLabels: Record<AccountTitleType, string> = {
+    [AccountTitleType.Revenue]: '収益',
+    [AccountTitleType.Expense]: '費用',
+}
+
+export enum AccountTitleSubType {
+    Sales = 1
+    NonOperatingRevenue = 2 
+    ExtraordinaryIncome = 3
+    CostOfGoodsSold = 100
+    SellingGeneralAdministrativeExpense = 101
+    NonOperatingExpense = 102
+    ExtraordinaryLoss = 103
+}
+
+export const AccountTitleSubTypeLabels: Record<AccountTitleSubType, string> = {
+    [AccountTitleSubType.Sales]: '売上',
+    [AccountTitleSubType.NonOperatingRevenue]: '営業外収益',
+    [AccountTitleSubType.ExtraordinaryIncome]: '特別利益',
+    [AccountTitleSubType.CostOfGoodsSold]: '売上原価',
+    [AccountTitleSubType.SellingGeneralAdministrativeExpense]: '販売費及び一般管理費',
+    [AccountTitleSubType.NonOperatingExpense]: '営業外費用',
+    [AccountTitleSubType.ExtraordinaryLoss]: '特別損失',
+}

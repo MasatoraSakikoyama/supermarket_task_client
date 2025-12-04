@@ -2,7 +2,7 @@
  * Type definitions for API request/response
  */
 
-import { AccountPeriodType } from '@/constants';
+import { AccountPeriodType, AccountTitleType, AccountTitleSubType } from '@/constants';
 
 // =============================================================================
 // API Types
@@ -77,24 +77,68 @@ export interface ShopResponse {
 }
 
 // =============================================================================
+// Shop Account Title Types
+// =============================================================================
+
+export interface ShopAccountTitleCreate {
+  shop_id: number;
+  type: AccountTitleType;
+  sub_type?: AccountTitleSubType;
+  code: string;
+  name: string;
+  order: number;
+}
+
+export interface ShopAccountTitleUpdate {
+  id: number;
+  shop_id: number;
+  type?: AccountTitleType;
+  sub_type?: AccountTitleSubType;
+  code?: string;
+  name?: string;
+  order?: number;
+}
+
+export interface ShopAccountTitleResponse {
+  id: number;
+  shop_id: number;
+  type: AccountTitleType;
+  sub_type: AccountTitleSubType | null;
+  code: string;
+  name: string;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// =============================================================================
 // Shop Account Entry Types
 // =============================================================================
 
 export interface ShopAccountEntryCreate {
-  name: string;
-  description?: string;
+  shop_id: number;
+  shopp_account_title_id: number;
+  year: number;
+  month: number;
+  amount: number;
 }
 
 export interface ShopAccountEntryUpdate {
-  name?: string;
-  description?: string;
+  id: number;
+  shop_id: number;
+  shopp_account_title_id: number;
+  year: number;
+  month: number;
+  amount: number;
 }
 
 export interface ShopAccountEntryResponse {
   id: number;
   shop_id: number;
-  name: string;
-  description: string | null;
+  shopp_account_title_id: number;
+  year: number;
+  month: number;
+  amount: number;
   created_at: string;
   updated_at: string;
 }

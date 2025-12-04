@@ -8,9 +8,6 @@ import { useSidebar } from '@/contexts/SidebarContext';
 const navItems = [
   { href: '/summary', label: 'Summary' },
   { href: '/shops', label: 'Shops' },
-  { href: '/register', label: 'Register' },
-  { href: '/update', label: 'Update' },
-  { href: '/delete', label: 'Delete' },
 ];
 
 export default function Navigation() {

@@ -7,7 +7,7 @@ import { API_BASE_URL } from '@/constants';
 
 // Create axios instance with default configuration
 export const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: `/${API_BASE_URL}`,
   headers: {
     'Content-Type': 'application/json',
   },

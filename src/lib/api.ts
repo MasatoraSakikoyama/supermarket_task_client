@@ -201,11 +201,83 @@ export async function deleteShop(token: string, shopId: number): Promise<ApiResp
 }
 
 // =============================================================================
-// Shop Account Data API
+// Shop Account Title API
 // =============================================================================
 
 /**
- * Get all Account Data for a shop with pagination
+ * Get all Account Title for a shop with pagination
+ */
+export async function getShopAccountTitleList(
+  token: string,
+  shopId: number,
+  offset: number = 0,
+  limit: number = 100
+): Promise<ApiResponse<ShopAccountTitleResponse[]>> {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  return get<ShopAccountTitleResponse[]>(`/shop/${shopId}/account_title?${params}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Get a single Account Title by ID for a shop
+ */
+export async function getShopAccountTitle(
+  token: string,
+  shopId: number,
+  accountTitleId: number
+): Promise<ApiResponse<ShopAccountTitleResponse>> {
+  return get<ShopAccountTitleResponse>(`/shop/${shopId}/account_title/${accountTitleId}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Create a new Account Title for a shop
+ */
+export async function createShopAccountTitle(
+  token: string,
+  shopId: number,
+  data: ShopAccountTitleCreate
+): Promise<ApiResponse<ShopAccountTitleResponse>> {
+  return post<ShopAccountTitleResponse>(`/shop/${shopId}/account_title`, data, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Update an existing Account Title for a shop
+ */
+export async function updateShopAccountTitle(
+  token: string,
+  shopId: number,
+  accountTitleId: number,
+  data: ShopAccountTitleUpdate
+): Promise<ApiResponse<ShopAccountTitleResponse>> {
+  return put<ShopAccountTitleResponse>(`/shop/${shopId}/account_title/${accountTitleId}`, data, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+/**
+ * Delete a Account Title for a shop
+ */
+export async function deleteShopAccountTitle(
+  token: string,
+  shopId: number,
+  accountTitleId: number
+): Promise<ApiResponse<null>> {
+  return del<null>(`/shop/${shopId}/account_title/${accountTitleId}`, {
+    'Authorization': `Bearer ${token}`,
+  });
+}
+
+// =============================================================================
+// Shop Account Entry API
+// =============================================================================
+
+/**
+ * Get all Account Entry for a shop with pagination
  */
 export async function getShopAccountEntryList(
   token: string,
@@ -214,60 +286,60 @@ export async function getShopAccountEntryList(
   limit: number = 100
 ): Promise<ApiResponse<ShopAccountEntryResponse[]>> {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
-  return get<ShopAccountEntryResponse[]>(`/shop/${shopId}/account_data?${params}`, {
+  return get<ShopAccountEntryResponse[]>(`/shop/${shopId}/account_entry?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
 
 /**
- * Get a single Account Data by ID for a shop
+ * Get a single Account Entry by ID for a shop
  */
 export async function getShopAccountEntry(
   token: string,
   shopId: number,
-  accountDataId: number
+  accountEntryId: number
 ): Promise<ApiResponse<ShopAccountEntryResponse>> {
-  return get<ShopAccountEntryResponse>(`/shop/${shopId}/account_data/${accountDataId}`, {
+  return get<ShopAccountEntryResponse>(`/shop/${shopId}/account_entry/${accountEntryId}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
 
 /**
- * Create a new Account Data for a shop
+ * Create a new Account Entry for a shop
  */
 export async function createShopAccountEntry(
   token: string,
   shopId: number,
   data: ShopAccountEntryCreate
 ): Promise<ApiResponse<ShopAccountEntryResponse>> {
-  return post<ShopAccountEntryResponse>(`/shop/${shopId}/account_data`, data, {
+  return post<ShopAccountEntryResponse>(`/shop/${shopId}/account_entry`, data, {
     'Authorization': `Bearer ${token}`,
   });
 }
 
 /**
- * Update an existing Account Data for a shop
+ * Update an existing Account Entry for a shop
  */
 export async function updateShopAccountEntry(
   token: string,
   shopId: number,
-  accountDataId: number,
+  accountEntryId: number,
   data: ShopAccountEntryUpdate
 ): Promise<ApiResponse<ShopAccountEntryResponse>> {
-  return put<ShopAccountEntryResponse>(`/shop/${shopId}/account_data/${accountDataId}`, data, {
+  return put<ShopAccountEntryResponse>(`/shop/${shopId}/account_entry/${accountEntryId}`, data, {
     'Authorization': `Bearer ${token}`,
   });
 }
 
 /**
- * Delete a Account Data for a shop
+ * Delete a Account Entry for a shop
  */
 export async function deleteShopAccountEntry(
   token: string,
   shopId: number,
-  accountDataId: number
+  accountEntryId: number
 ): Promise<ApiResponse<null>> {
-  return del<null>(`/shop/${shopId}/account_data/${accountDataId}`, {
+  return del<null>(`/shop/${shopId}/account_entry/${accountEntryId}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
