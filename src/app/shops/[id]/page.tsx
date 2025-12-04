@@ -91,7 +91,11 @@ export default function ShopsDetailPage() {
 
   // At this point, all data is guaranteed to be loaded
   const shop = shopResponse!.data!;
-  const shopAccountTitles = shopAccountTitleResponse!.data || [];
+  const shopAccountTitleListData = shopAccountTitleResponse!.data!;
+  const shopAccountTitles = [
+    ...(shopAccountTitleListData.revenues || []),
+    ...(shopAccountTitleListData.expenses || [])
+  ];
   const shopAccountEntries = shopAccountEntryResponse!;
 
   // Pagination handlers
