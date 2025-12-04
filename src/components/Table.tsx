@@ -5,6 +5,7 @@ export interface Column<T> {
   header: string;
   render: (item: T) => ReactNode;
   className?: string;
+  cellClassName?: string;
 }
 
 interface TableProps<T> {
@@ -67,7 +68,7 @@ export default function Table<T>({
                 {columns.map((column) => (
                   <td
                     key={column.key}
-                    className="px-3 md:px-6 py-4 text-sm text-gray-900"
+                    className={column.cellClassName || "px-3 md:px-6 py-4 text-sm text-gray-900"}
                   >
                     {column.render(item)}
                   </td>
