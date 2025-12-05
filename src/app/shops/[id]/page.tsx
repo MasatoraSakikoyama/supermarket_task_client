@@ -91,12 +91,9 @@ export default function ShopsDetailPage() {
 
   // At this point, all data is guaranteed to be loaded
   const shop = shopResponse!.data!;
-  const shopAccountTitleListData = shopAccountTitleResponse!.data!;
-  const shopAccountTitles = [
-    ...(shopAccountTitleListData.revenues || []),
-    ...(shopAccountTitleListData.expenses || [])
-  ];
-  const shopAccountEntries = shopAccountEntryResponse!;
+  const shopAccountTitlesRevenues = shopAccountTitleResponse!.data.revenues || [];
+  const shopAccountTitlesExpenses = shopAccountTitleResponse!.data.expenses || [];
+  const shopAccountEntries = shopAccountEntryResponse!.data;
 
   // Pagination handlers
   const handlePrevPage = () => {
@@ -159,17 +156,15 @@ export default function ShopsDetailPage() {
 
       <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
         <div className="mb-4 md:mb-6">
-          <h2 className="text-xl font-semibold mb-4">Shop Account Entries</h2>
-          
           {/* Two-table layout: left for account titles, right for entries */}
           <div className="flex gap-0 overflow-x-auto">
             {/* Left table: Account Titles (no pagination) */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 min-w-1/4">
               <Table
                 columns={[
                   {
                     key: 'name',
-                    header: 'Account Title',
+                    header: 'Revenunes',
                     render: (item: ShopAccountTitleResponse) => (
                       <span className="font-medium">{item.name}</span>
                     ),
@@ -177,7 +172,7 @@ export default function ShopsDetailPage() {
                     cellClassName: BORDER_RIGHT_CELL_CLASS,
                   },
                 ]}
-                data={shopAccountTitles}
+                data={shopAccountTitlesRevenues}
                 loading={isFetchingShopAccountTitle}
                 emptyMessage="No account titles available."
                 getRowKey={(item) => item.id}
@@ -204,7 +199,58 @@ export default function ShopsDetailPage() {
                     },
                   } as Column<ShopAccountTitleResponse>;
                 })}
-                data={shopAccountTitles}
+                data={shopAccountTitlesRevenues}
+                loading={isFetchingShopAccountTitle}
+                emptyMessage="No entries available."
+                getRowKey={(item) => item.id}
+              />
+            </div>
+          </div>
+
+          {/* Two-table layout: left for account titles, right for entries */}
+          <div className="flex gap-0 overflow-x-auto">
+            {/* Left table: Account Titles (no pagination) */}
+            <div className="flex-shrink-0 min-w-1/4">
+              <Table
+                columns={[
+                  {
+                    key: 'name',
+                    header: 'Expenses',
+                    render: (item: ShopAccountTitleResponse) => (
+                      <span className="font-medium">{item.name}</span>
+                    ),
+                    className: BORDER_RIGHT_HEADER_CLASS,
+                    cellClassName: BORDER_RIGHT_CELL_CLASS,
+                  },
+                ]}
+                data={shopAccountTitlesExpenses}
+                loading={isFetchingShopAccountTitle}
+                emptyMessage="No account titles available."
+                getRowKey={(item) => item.id}
+                headerClassName={BORDER_RIGHT_HEADER_CLASS}
+              />
+            </div>
+
+            {/* Right table: Account Entries by period */}
+            <div className="flex-grow min-w-0">
+              <Table
+                columns={uniquePeriods.map((period) => {
+                  const [year, month] = period.split('-');
+                  return {
+                    key: period,
+                    header: `${year}/${month}`,
+                    render: (item: ShopAccountTitleResponse) => {
+                      // Find the amount for this account title and period
+                      const entry = shopAccountEntries.data?.find(
+                        (e) =>
+                          e.shopp_account_title_id === item.id &&
+                          `${e.year}-${e.month}` === period
+                      );
+                      return entry ? entry.amount : '-';
+                    },
+                  } as Column<ShopAccountTitleResponse>;
+                })}
+                data={shopAccountTitlesExpenses}
                 loading={isFetchingShopAccountTitle}
                 emptyMessage="No entries available."
                 getRowKey={(item) => item.id}
