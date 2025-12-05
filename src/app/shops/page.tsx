@@ -36,26 +36,27 @@ export default function ShopsPage() {
 
   const currentPage = Math.floor(offset / limit) + 1;
 
+  const headers = useMemo(
+    () => ['ID', 'Name', 'Period Type', 'Cumulative', 'Created At', 'Actions'],
+    []
+  );
+
   const columns: Column<ShopResponse>[] = useMemo(
     () => [
       {
         key: 'id',
-        header: 'ID',
         render: (shop) => <span className="whitespace-nowrap">{shop.id}</span>,
       },
       {
         key: 'name',
-        header: 'Name',
         render: (shop) => <span className="whitespace-nowrap">{shop.name}</span>,
       },
       {
         key: 'period_type',
-        header: 'Period Type',
         render: (shop) => <span className="whitespace-nowrap">{AccountPeriodTypeLabels[shop.period_type]}</span>,
       },
       {
         key: 'is_cumulative',
-        header: 'Cumulative',
         render: (shop) => (
           <span className="whitespace-nowrap">
             {shop.is_cumulative ? 'Yes' : 'No'}
@@ -64,7 +65,6 @@ export default function ShopsPage() {
       },
       {
         key: 'created_at',
-        header: 'Created At',
         render: (shop) => (
           <span className="whitespace-nowrap">
             {new Date(shop.created_at).toLocaleDateString()}
@@ -73,7 +73,6 @@ export default function ShopsPage() {
       },
       {
         key: '',
-        header: 'Actions',
         render: (shop) => (
           <button
             className="text-blue-600 hover:underline"
@@ -101,6 +100,7 @@ export default function ShopsPage() {
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <Table
+          headers={headers}
           columns={columns}
           data={shops}
           loading={isLoading}

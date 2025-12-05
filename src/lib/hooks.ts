@@ -294,16 +294,15 @@ export function useDeleteShopAccountTitle() {
 export function useShopAccountEntryList(
   token: string | null,
   shopId: number,
-  offset: number = 0,
-  limit: number = 10,
+  year: number,
 ) {
   return useQuery({
-    queryKey: ['shop', shopId, 'account_entry', offset, limit],
+    queryKey: ['shop', shopId, 'account_entry', year],
     queryFn: () => {
       if (!token) {
         throw new Error('No token provided');
       }
-      return getShopAccountEntryList(token, shopId, offset, limit);
+      return getShopAccountEntryList(token, shopId, year);
     },
     enabled: !!token && shopId > 0,
     placeholderData: keepPreviousData,

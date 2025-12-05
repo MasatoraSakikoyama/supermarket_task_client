@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useShop, useUpdateShop } from '@/lib/hooks';
-import { AccountPeriodType, AccountPeriodTypeLabels } from '@/constants';
+import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
+import { AccountPeriodTypeLabels } from '@/constants';
+import Table, { Column } from '@/components/Table';
+import TableFrom2D from '@/components/TableFrom2D';
 import MessageDisplay from '@/components/MessageDisplay';
+import { ShopAccountTitleResponse } from '@/type/api';
 
 interface FormData {
   name: string;
@@ -18,24 +21,27 @@ export default function ShopsEditPage() {
   const { getToken } = useAuth();
   const token = getToken();
   const params = useParams<{ id: string }>();
-  const shopId = params.id ? parseInt(params.id, 10) : 0;
+  const shopId = parseInt(params.id, 10);
 
-
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    period_type: AccountPeriodType.Monthly,
-    is_cumulative: false,
-  });
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // Fetch shop data
-  const { data: shopResponse, isLoading: isFetching, error: fetchError } = useShop(
+  // Fetch data
+  const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
     token,
     shopId
   );
 
+  const { data: shopAccountTitleResponse, isLoading: isFetchingShopAccountTitle, error: fetchShopAccountTitleError } = useShopAccountTitleList(
+    token,
+    shopId,
+  );
+
+  const { data: shopAccountEntryResponse, isLoading: isFetchingShopAccountEntry, error: fetchShopAccountEntryError } = useShopAccountEntryList(
+    token,
+    shopId,
+    year,
+  );
+
   // Update shop mutation
-  const updateMutation = useUpdateShop();
+  // const updateMutation = useUpdateShop();
 
   // Populate form when shop data is loaded
   useEffect(() => {
@@ -50,17 +56,9 @@ export default function ShopsEditPage() {
     }
   }, [shopResponse]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
-    
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData((prev) => ({ ...prev, [name]: checked }));
-    } else if (name === 'period_type') {
-      setFormData((prev) => ({ ...prev, [name]: parseInt(value, 10) }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,118 +96,166 @@ export default function ShopsEditPage() {
     }
   };
 
-  // Determine message to display for loading/error states
-  let pageMessageType: 'error' | 'loading' | null = null;
-  let pageMessageText = '';
+  // Constants for styling
+  const BORDER_RIGHT_HEADER_CLASS = 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200';
+  const BORDER_RIGHT_CELL_CLASS = 'px-3 md:px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200';
+
+  // Determine message to display
+  let messageType: 'error' | 'loading' | null = null;
+  let messageText = '';
 
   if (!shopId) {
-    pageMessageType = 'error';
-    pageMessageText = 'Error: No shop ID provided';
-  } else if (isFetching) {
-    pageMessageType = 'loading';
-    pageMessageText = 'Loading shop data...';
-  } else if (fetchError || !shopResponse?.data) {
-    pageMessageType = 'error';
-    pageMessageText = `Error: ${shopResponse?.error || 'Failed to fetch shop data'}`;
+    messageType = 'error';
+    messageText = 'Error: No shop ID provided';
+  } else if (isFetchingShop || isFetchingShopAccountTitle || isFetchingShopAccountEntry) {
+    messageType = 'loading';
+    messageText = 'Loading shop data...';
+  } else if (fetchShopError || !shopResponse?.data || fetchShopAccountTitleError || !shopAccountTitleResponse || fetchShopAccountEntryError || !shopAccountEntryResponse) {
+    messageType = 'error';
+    const errors = [];
+    if (fetchShopError || !shopResponse?.data) {
+      errors.push(shopResponse?.error || 'Failed to fetch shop data');
+    }
+    if (fetchShopAccountTitleError || !shopAccountTitleResponse) {
+      errors.push(shopAccountTitleResponse?.error || 'Failed to fetch shop account title data');
+    }
+    if (fetchShopAccountEntryError || !shopAccountEntryResponse) {
+      errors.push(shopAccountEntryResponse?.error || 'Failed to fetch shop account entry data');
+    }
+    messageText = errors.length > 0 ? `Error: ${errors.join('. ')}` : 'Error: Failed to load data';
   }
 
-  // Show loading/error message if applicable
-  if (pageMessageType) {
+  // Show message if there's an error or loading state
+  if (messageType) {
     return (
       <div className="py-4 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
-        <MessageDisplay type={pageMessageType} message={pageMessageText} />
+        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Detail</h1>
+        <MessageDisplay type={messageType} message={messageText} />
       </div>
     );
   }
+
+  // At this point, all data is guaranteed to be loaded
+  const shop = shopResponse!.data!;
+  const shopAccountTitlesRevenues = shopAccountTitleResponse!.data.revenues || [];
+  const shopAccountTitlesExpenses = shopAccountTitleResponse!.data.expenses || [];
+  const shopAccountEntriesHeaders = shopAccountEntryResponse!.data.headers || [];
+  const shopAccountEntriesRevenues = shopAccountEntryResponse!.data.revenues || [];
+  const shopAccountEntriesExpenses = shopAccountEntryResponse!.data.expenses || [];
 
   return (
     <div className="py-4 md:py-8">
       <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Shop - Edit</h1>
 
-      {message && (
-        <MessageDisplay 
-          type={message.type} 
-          message={message.text}
-        />
-      )}
+      <div className="w-full bg-white shadow rounded-lg p-4">
+        <div className="mb-4">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            Name
+          </label>
+          <div
+            id="name"
+            className="w-full px-3 py-2 text-gray-700 text-sm md:text-base"
+          >
+            {shop.name}
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="period_type" className="block text-sm font-medium text-gray-700">
+            Period Type
+          </label>
+          <div
+            id="period_type"
+            className="w-full px-3 py-2 text-gray-700 text-sm md:text-base"
+          >
+            {AccountPeriodTypeLabels[shop.period_type]}
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              name="is_cumulative"
+              checked={shop.is_cumulative}
+              className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              disabled
+            />
+            <span className="text-sm font-medium text-gray-700">Is Cumulative</span>
+          </label>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="w-full">
-        <div className="w-full bg-white shadow rounded-lg p-4">
-          <div className="mb-4">
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-              placeholder="Enter shop name"
-            />
-          </div>
+          <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
+            <div className="mb-4 md:mb-6">
+              <h2 className="text-lg md:text-xl font-bold">Account Entries - {year}</h2>
 
-          <div className="mb-4">
-            <label htmlFor="period_type" className="block text-sm font-medium text-gray-700 mb-1">
-              Period Type
-            </label>
-            <select
-              id="period_type"
-              name="period_type"
-              value={formData.period_type}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-            >
-              {Object.entries(AccountPeriodTypeLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div className="flex gap-0 overflow-x-auto">
+                <div className="flex-shrink-0 min-w-1/4">
+                  <Table
+                    headers={['Revenunes']}
+                    columns={[
+                      {
+                        key: 'name',
+                        render: (item: Any) => (
+                          <span className="font-medium">{item.name}</span>
+                        ),
+                        cellClassName: BORDER_RIGHT_CELL_CLASS,
+                      },
+                    ]}
+                    data={shopAccountTitlesRevenues}
+                    loading={isFetchingShopAccountTitle}
+                    emptyMessage="No account titles available."
+                    headerClassName={BORDER_RIGHT_HEADER_CLASS}
+                  />
+                </div>
 
-          <div className="mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="is_cumulative"
-                checked={formData.is_cumulative}
-                onChange={handleChange}
-                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <span className="text-sm font-medium text-gray-700">Is Cumulative</span>
-            </label>
-          </div>
-        </div>
-        
-        <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
-          <div className="mb-4">
+                <div className="flex-grow min-w-0">
+                  <TableFrom2D
+                    headers={shopAccountEntriesHeaders}
+                    data={shopAccountEntriesRevenues}
+                    loading={isFetchingShopAccountTitle}
+                    render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
+                    rowCount={shopAccountEntriesHeaders.length}
+                    colCount={shopAccountTitlesRevenues.length}
+                  />
+                </div>
+              </div>
 
+              <div className="flex gap-0 overflow-x-auto">
+                <div className="flex-shrink-0 min-w-1/4">
+                  <Table
+                    headers={['Expenses']}
+                    columns={[
+                      {
+                        key: 'name',
+                        render: (item: Any) => (
+                          <span className="font-medium">{item.name}</span>
+                        ),
+                        cellClassName: BORDER_RIGHT_CELL_CLASS,
+                      },
+                    ]}
+                    data={shopAccountTitlesExpenses}
+                    loading={isFetchingShopAccountTitle}
+                    emptyMessage="No account titles available."
+                    headerClassName={BORDER_RIGHT_HEADER_CLASS}
+                  />
+                </div>
+
+                <div className="flex-grow min-w-0">
+                  <TableFrom2D
+                    headers={shopAccountEntriesHeaders}
+                    data={shopAccountEntriesExpenses}
+                    loading={isFetchingShopAccountTitle}
+                    render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
+                    rowCount={shopAccountEntriesHeaders.length}
+                    colCount={shopAccountTitlesExpenses.length}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
-          <div className="flex space-x-4">
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
-            >
-              {updateMutation.isPending ? 'Updating...' : 'Update'}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push(`/shops/${shopId}`)}
-              className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm md:text-base"
-            >
-              Back
-            </button>
-          </div>
-        </div>
       </form>
     </div>
   );

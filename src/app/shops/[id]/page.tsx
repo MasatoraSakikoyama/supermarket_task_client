@@ -4,9 +4,10 @@ import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
-import { AccountPeriodTypeLabels, DEFAULT_PAGE_SIZE } from '@/constants';
+import { AccountPeriodTypeLabels } from '@/constants';
 import Pagination from '@/components/Pagination';
 import Table, { Column } from '@/components/Table';
+import TableFrom2D from '@/components/TableFrom2D';
 import MessageDisplay from '@/components/MessageDisplay';
 import { ShopAccountTitleResponse } from '@/type/api';
 
@@ -18,8 +19,9 @@ export default function ShopsDetailPage() {
   const shopId = params.id ? parseInt(params.id, 10) : 0;
 
   // Pagination state
-  const [offset, setOffset] = useState(0);
-  const [limit] = useState(DEFAULT_PAGE_SIZE);
+  const now = new Date();
+  const nowYear = now.getFullYear();
+  const [year, setYear] = useState(now.getFullYear());
 
   // Fetch data
   const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
@@ -35,20 +37,8 @@ export default function ShopsDetailPage() {
   const { data: shopAccountEntryResponse, isLoading: isFetchingShopAccountEntry, error: fetchShopAccountEntryError } = useShopAccountEntryList(
     token,
     shopId,
-    offset,
-    limit,
+    year,
   );
-
-  // Memoize unique periods calculation (must be before early returns)
-  const uniquePeriods = useMemo(() => {
-    const periods = new Set<string>();
-    if (shopAccountEntryResponse?.data) {
-      shopAccountEntryResponse.data.forEach((entry) => {
-        periods.add(`${entry.year}-${entry.month}`);
-      });
-    }
-    return Array.from(periods).sort();
-  }, [shopAccountEntryResponse]);
 
   // Constants for styling
   const BORDER_RIGHT_HEADER_CLASS = 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200';
@@ -91,28 +81,25 @@ export default function ShopsDetailPage() {
 
   // At this point, all data is guaranteed to be loaded
   const shop = shopResponse!.data!;
-  const shopAccountTitleListData = shopAccountTitleResponse!.data!;
-  const shopAccountTitles = [
-    ...(shopAccountTitleListData.revenues || []),
-    ...(shopAccountTitleListData.expenses || [])
-  ];
-  const shopAccountEntries = shopAccountEntryResponse!;
+  const shopAccountTitlesRevenues = shopAccountTitleResponse!.data.revenues || [];
+  const shopAccountTitlesExpenses = shopAccountTitleResponse!.data.expenses || [];
+  const shopAccountEntriesHeaders = shopAccountEntryResponse!.data.headers || [];
+  const shopAccountEntriesRevenues = shopAccountEntryResponse!.data.revenues || [];
+  const shopAccountEntriesExpenses = shopAccountEntryResponse!.data.expenses || [];
 
   // Pagination handlers
   const handlePrevPage = () => {
-    if (offset >= limit) {
-      setOffset(offset - limit);
-    }
+      setYear(year - 1);
   };
 
   const handleNextPage = () => {
-    if (shopAccountEntries.data && shopAccountEntries.data.length >= limit) {
-      setOffset(offset + limit);
+    if (year < nowYear) {
+      setYear(year + 1);
     }
   };
 
-  const currentPage = Math.floor(offset / limit) + 1;
-  const hasMore = shopAccountEntries.data ? shopAccountEntries.data.length >= limit : false;
+  const currentPage = NaN;
+  const hasMore = year < nowYear;
 
   return (
     <div className="py-4 md:py-8">
@@ -159,55 +146,68 @@ export default function ShopsDetailPage() {
 
       <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
         <div className="mb-4 md:mb-6">
-          <h2 className="text-xl font-semibold mb-4">Shop Account Entries</h2>
-          
-          {/* Two-table layout: left for account titles, right for entries */}
+          <h2 className="text-lg md:text-xl font-bold">Account Entries - {year}</h2>
+
           <div className="flex gap-0 overflow-x-auto">
-            {/* Left table: Account Titles (no pagination) */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 min-w-1/4">
               <Table
+                headers={['Revenunes']}
                 columns={[
                   {
                     key: 'name',
-                    header: 'Account Title',
-                    render: (item: ShopAccountTitleResponse) => (
+                    render: (item: Any) => (
                       <span className="font-medium">{item.name}</span>
                     ),
-                    className: BORDER_RIGHT_HEADER_CLASS,
                     cellClassName: BORDER_RIGHT_CELL_CLASS,
                   },
                 ]}
-                data={shopAccountTitles}
+                data={shopAccountTitlesRevenues}
                 loading={isFetchingShopAccountTitle}
                 emptyMessage="No account titles available."
-                getRowKey={(item) => item.id}
                 headerClassName={BORDER_RIGHT_HEADER_CLASS}
               />
             </div>
 
-            {/* Right table: Account Entries by period */}
             <div className="flex-grow min-w-0">
-              <Table
-                columns={uniquePeriods.map((period) => {
-                  const [year, month] = period.split('-');
-                  return {
-                    key: period,
-                    header: `${year}/${month}`,
-                    render: (item: ShopAccountTitleResponse) => {
-                      // Find the amount for this account title and period
-                      const entry = shopAccountEntries.data?.find(
-                        (e) =>
-                          e.shopp_account_title_id === item.id &&
-                          `${e.year}-${e.month}` === period
-                      );
-                      return entry ? entry.amount : '-';
-                    },
-                  } as Column<ShopAccountTitleResponse>;
-                })}
-                data={shopAccountTitles}
+              <TableFrom2D
+                headers={shopAccountEntriesHeaders}
+                data={shopAccountEntriesRevenues}
                 loading={isFetchingShopAccountTitle}
-                emptyMessage="No entries available."
-                getRowKey={(item) => item.id}
+                render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
+                rowCount={shopAccountEntriesHeaders.length}
+                colCount={shopAccountTitlesRevenues.length}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-0 overflow-x-auto">
+            <div className="flex-shrink-0 min-w-1/4">
+              <Table
+                headers={['Expenses']}
+                columns={[
+                  {
+                    key: 'name',
+                    render: (item: Any) => (
+                      <span className="font-medium">{item.name}</span>
+                    ),
+                    cellClassName: BORDER_RIGHT_CELL_CLASS,
+                  },
+                ]}
+                data={shopAccountTitlesExpenses}
+                loading={isFetchingShopAccountTitle}
+                emptyMessage="No account titles available."
+                headerClassName={BORDER_RIGHT_HEADER_CLASS}
+              />
+            </div>
+
+            <div className="flex-grow min-w-0">
+              <TableFrom2D
+                headers={shopAccountEntriesHeaders}
+                data={shopAccountEntriesExpenses}
+                loading={isFetchingShopAccountTitle}
+                render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
+                rowCount={shopAccountEntriesHeaders.length}
+                colCount={shopAccountTitlesExpenses.length}
               />
             </div>
           </div>
@@ -226,7 +226,7 @@ export default function ShopsDetailPage() {
         <div className="flex space-x-4">
           <button
             type="button"
-            onClick={() => router.push(`/shops/${shopId}/edit`)}
+            onClick={() => router.push(`/shops/${shopId}/edit?year=${year}`)}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-gray-700 text-sm md:text-base"
           >
             Edit
@@ -237,17 +237,6 @@ export default function ShopsDetailPage() {
             className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm md:text-base"
           >
             Back
-          </button>
-        </div>
-
-        <div className="flex space-x-4 mt-4">
-          <div className="flex-1"></div>
-          <button
-            type="button"
-            onClick={() => router.push(`/shops/${shopId}/delete`)}
-            className="flex-1 py-2 bg-red-600 text-white rounded-md hover:bg-gray-700 text-sm md:text-base"
-          >
-            Delete
           </button>
         </div>
       </div>

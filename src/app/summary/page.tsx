@@ -51,26 +51,27 @@ export default function SummaryPage() {
 
   const hasMore = offset + limit < allData.length;
 
+  const headers = useMemo(
+    () => ['ID', 'Name', 'Quantity', 'Price'],
+    []
+  );
+
   const columns: Column<SummaryData>[] = useMemo(
     () => [
       {
         key: 'id',
-        header: 'ID',
         render: (item) => <span className="whitespace-nowrap">{item.id}</span>,
       },
       {
         key: 'name',
-        header: 'Name',
         render: (item) => <span className="whitespace-nowrap">{item.name}</span>,
       },
       {
         key: 'quantity',
-        header: 'Quantity',
         render: (item) => <span className="whitespace-nowrap">{item.quantity}</span>,
       },
       {
         key: 'price',
-        header: 'Price',
         render: (item) => <span className="whitespace-nowrap">${item.price.toFixed(2)}</span>,
       },
     ],
@@ -102,11 +103,11 @@ export default function SummaryPage() {
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <Table
+          headers={headers}
           columns={columns}
           data={paginatedData}
           loading={isLoading}
           emptyMessage='No data available. Click "Fetch Summary Data" to load data from the API.'
-          getRowKey={(item) => String(item.id)}
         />
 
         {/* Pagination Controls */}

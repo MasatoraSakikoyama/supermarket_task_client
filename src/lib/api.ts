@@ -283,10 +283,9 @@ export async function deleteShopAccountTitle(
 export async function getShopAccountEntryList(
   token: string,
   shopId: number,
-  offset: number = 0,
-  limit: number = 100
+  year: number,
 ): Promise<ApiResponse<ShopAccountEntryResponse[]>> {
-  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  const params = new URLSearchParams({ year: String(year) });
   return get<ShopAccountEntryResponse[]>(`/shop/${shopId}/account_entry?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
