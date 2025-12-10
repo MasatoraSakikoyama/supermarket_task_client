@@ -1,11 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
 import { AccountPeriodTypeLabels } from '@/constants';
 import Table, { Column } from '@/components/Table';
-import TableFrom2D from '@/components/TableFrom2D';
+import EditableTableFrom2D from '@/components/EditableTableFrom2D';
 import MessageDisplay from '@/components/MessageDisplay';
 import { ShopAccountTitleResponse } from '@/type/api';
 
@@ -16,7 +17,7 @@ export default function ShopsEditPage() {
   const params = useParams<{ id: string }>();
   const shopId = parseInt(params.id, 10);
   const searchParams = useSearchParams();
-  const year = parseInt(searchParams.get('year'), 10);
+  const year = parseInt(searchParams.get('year') || String(new Date().getFullYear()), 10);
 
   // Fetch data
   const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
@@ -81,6 +82,32 @@ export default function ShopsEditPage() {
   const shopAccountEntriesHeaders = shopAccountEntryResponse!.data!.headers || [];
   const shopAccountEntriesRevenues = shopAccountEntryResponse!.data!.revenues || [];
   const shopAccountEntriesExpenses = shopAccountEntryResponse!.data!.expenses || [];
+
+  // State for editable data
+  const [editedRevenues, setEditedRevenues] = useState(shopAccountEntriesRevenues);
+  const [editedExpenses, setEditedExpenses] = useState(shopAccountEntriesExpenses);
+
+  // Handle cell changes
+  const handleRevenueChange = (rowIndex: number, colIndex: number, value: any) => {
+    const updatedRevenues = [...editedRevenues];
+    updatedRevenues[rowIndex][colIndex] = value;
+    setEditedRevenues(updatedRevenues);
+  };
+
+  const handleExpenseChange = (rowIndex: number, colIndex: number, value: any) => {
+    const updatedExpenses = [...editedExpenses];
+    updatedExpenses[rowIndex][colIndex] = value;
+    setEditedExpenses(updatedExpenses);
+  };
+
+  // Handle save
+  const handleSave = () => {
+    // TODO: Implement API call to save the edited data
+    console.log('Saving data...', {
+      revenues: editedRevenues,
+      expenses: editedExpenses,
+    });
+  };
 
   return (
     <div className="py-4 md:py-8">
@@ -150,11 +177,12 @@ export default function ShopsEditPage() {
                 </div>
 
                 <div className="flex-grow min-w-0">
-                  <TableFrom2D
+                  <EditableTableFrom2D
                     headers={shopAccountEntriesHeaders}
-                    data={shopAccountEntriesRevenues}
+                    data={editedRevenues}
                     loading={isFetchingShopAccountTitle}
-                    render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
+                    onChange={handleRevenueChange}
+                    editable={true}
                     rowCount={shopAccountEntriesHeaders.length}
                     colCount={shopAccountTitlesRevenues.length}
                   />
@@ -182,11 +210,12 @@ export default function ShopsEditPage() {
                 </div>
 
                 <div className="flex-grow min-w-0">
-                  <TableFrom2D
+                  <EditableTableFrom2D
                     headers={shopAccountEntriesHeaders}
-                    data={shopAccountEntriesExpenses}
+                    data={editedExpenses}
                     loading={isFetchingShopAccountTitle}
-                    render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
+                    onChange={handleExpenseChange}
+                    editable={true}
                     rowCount={shopAccountEntriesHeaders.length}
                     colCount={shopAccountTitlesExpenses.length}
                   />
@@ -194,6 +223,25 @@ export default function ShopsEditPage() {
               </div>
             </div>
           </div>
+
+      <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
+        <div className="flex space-x-4">
+          <button
+            type="button"
+            onClick={handleSave}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm md:text-base"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push(`/shops/${shopId}`)}
+            className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm md:text-base"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
