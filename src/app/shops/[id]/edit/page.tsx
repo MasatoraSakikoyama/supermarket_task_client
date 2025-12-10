@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
+import { useShop, useShopAccountTitleList, useShopAccountEntryList, useCreateShopAccountEntryList } from '@/lib/hooks';
 import { AccountPeriodTypeLabels } from '@/constants';
 import Table, { Column } from '@/components/Table';
 import EditableTableFrom2D from '@/components/EditableTableFrom2D';
@@ -35,6 +35,9 @@ export default function ShopsEditPage() {
     shopId,
     year,
   );
+
+  // Mutation for saving account entries
+  const createShopAccountEntryList = useCreateShopAccountEntryList();
 
   // Constants for styling
   const BORDER_RIGHT_HEADER_CLASS = 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200';
@@ -109,12 +112,26 @@ export default function ShopsEditPage() {
   };
 
   // Handle save
-  const handleSave = () => {
-    // TODO: Implement API call to save the edited data
-    console.log('Saving data...', {
-      revenues: editedRevenues,
-      expenses: editedExpenses,
-    });
+  const handleSave = async () => {
+    if (!token) {
+      console.error('No token available');
+      return;
+    }
+
+    try {
+      await createShopAccountEntryList.mutateAsync({
+        token,
+        shopId,
+        data: {
+          revenues: editedRevenues,
+          expenses: editedExpenses,
+        },
+      });
+      // Navigate back to detail page after successful save
+      router.push(`/shops/${shopId}`);
+    } catch (error) {
+      console.error('Failed to save account entries:', error);
+    }
   };
 
   return (

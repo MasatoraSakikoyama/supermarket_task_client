@@ -243,7 +243,7 @@ export async function getShopAccountEntryList(
   year: number,
 ): Promise<ApiResponse<ShopAccountEntryResponse>> {
   const params = new URLSearchParams({ year: String(year) });
-  return get<ShopAccountEntryListResponse>(`/shop/${shopId}/account_entry?${params}`, {
+  return get<ShopAccountEntryResponse>(`/shop/${shopId}/account_entry?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
 }
@@ -254,10 +254,9 @@ export async function getShopAccountEntryList(
 export async function createShopAccountEntryList(
   token: string,
   shopId: number,
-  data: ShopAccountEntryCreate
+  data: ShopAccountEntryRequest
 ): Promise<ApiResponse<null>> {
-  const params = new URLSearchParams({ year: String(year) });
-  return post<null>(`/shop/${shopId}/account_entry?${param}`, data, {
+  return post<null>(`/shop/${shopId}/account_entry`, data, {
     'Authorization': `Bearer ${token}`,
   });
 }

@@ -33,7 +33,7 @@ export default function EditableTableFrom2D<T extends CellWithAmount>({
   headerClassName = DEFAULT_HEADER_CLASS,
   cellClassName = DEFAULT_CELL_CLASS,
   inputClassName = DEFAULT_INPUT_CLASS,
-  render = (item) => item.amount !== null ? item.amount.toLocaleString() : '-',
+  render = (item) => item.amount,
   rowCount,
   colCount,
   onChange,
