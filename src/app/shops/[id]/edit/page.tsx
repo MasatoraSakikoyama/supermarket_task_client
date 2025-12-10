@@ -17,7 +17,7 @@ export default function ShopsEditPage() {
   const params = useParams<{ id: string }>();
   const shopId = parseInt(params.id, 10);
   const searchParams = useSearchParams();
-  const year = parseInt(searchParams.get('year') || String(new Date().getFullYear()), 10);
+  const year = parseInt(searchParams.get('year'), 10);
 
   // Fetch data
   const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
