@@ -294,7 +294,7 @@ export function useDeleteShopAccountTitle() {
 export function useShopAccountEntryList(
   token: string | null,
   shopId: number,
-  year: number,
+  year: number | undefined,
 ) {
   return useQuery({
     queryKey: ['shop', shopId, 'account_entry', year],
@@ -302,9 +302,12 @@ export function useShopAccountEntryList(
       if (!token) {
         throw new Error('No token provided');
       }
+      if (year === undefined) {
+        throw new Error('Year parameter is required');
+      }
       return getShopAccountEntryList(token, shopId, year);
     },
-    enabled: !!token && shopId > 0,
+    enabled: !!token && shopId > 0 && year !== undefined,
     placeholderData: keepPreviousData,
   });
 }

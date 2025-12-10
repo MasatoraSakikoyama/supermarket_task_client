@@ -21,10 +21,6 @@ export default function ShopsEditPage() {
   const yearParam = searchParams.get('year');
   const parsedYear = yearParam ? parseInt(yearParam, 10) : NaN;
   const year: number | undefined = !isNaN(parsedYear) ? parsedYear : undefined;
-  
-  // Use current year as default if year is not provided
-  const currentYear = new Date().getFullYear();
-  const displayYear = year ?? currentYear;
 
   // Fetch data
   const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
@@ -40,7 +36,7 @@ export default function ShopsEditPage() {
   const { data: shopAccountEntryResponse, isLoading: isFetchingShopAccountEntry, error: fetchShopAccountEntryError } = useShopAccountEntryList(
     token,
     shopId,
-    displayYear,
+    year,
   );
 
   // Constants for styling
@@ -135,7 +131,7 @@ export default function ShopsEditPage() {
 
       <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
         <div className="mb-4 md:mb-6">
-          <h2 className="text-lg md:text-xl font-bold">Account Entries - {displayYear}</h2>
+          <h2 className="text-lg md:text-xl font-bold">Account Entries - {year}</h2>
 
               <div className="flex gap-0 overflow-x-auto">
                 <div className="flex-shrink-0 min-w-1/4">
