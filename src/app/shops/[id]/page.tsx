@@ -146,8 +146,6 @@ export default function ShopsDetailPage() {
 
       <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
         <div className="mb-4 md:mb-6">
-          <h2 className="text-lg md:text-xl font-bold">Account Entries - {year}</h2>
-
           <div className="flex gap-0 overflow-x-auto">
             <div className="flex-shrink-0 min-w-1/4">
               <Table
@@ -174,8 +172,6 @@ export default function ShopsDetailPage() {
                 data={shopAccountEntriesRevenues}
                 loading={isFetchingShopAccountTitle}
                 render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
-                rowCount={shopAccountEntriesHeaders.length}
-                colCount={shopAccountTitlesRevenues.length}
               />
             </div>
           </div>
@@ -206,8 +202,6 @@ export default function ShopsDetailPage() {
                 data={shopAccountEntriesExpenses}
                 loading={isFetchingShopAccountTitle}
                 render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
-                rowCount={shopAccountEntriesHeaders.length}
-                colCount={shopAccountTitlesExpenses.length}
               />
             </div>
           </div>

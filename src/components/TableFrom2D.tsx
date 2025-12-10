@@ -3,12 +3,10 @@ import { ReactNode } from 'react';
 interface TableProps<T> {
   headers: string[];
   data: T[][];
+  render?: (item: T) => ReactNode;
   loading?: boolean;
   headerClassName?: string;
   cellClassName?: string;
-  render?: (item: T) => ReactNode;
-  rowCount?: number;
-  colCount?: number;
 }
 
 const DEFAULT_HEADER_CLASS =
@@ -19,12 +17,10 @@ const DEFAULT_CELL_CLASS = "px-3 md:px-6 py-4 text-sm text-gray-900"
 export default function TableFrom2D<T>({
   headers,
   data,
+  render = (item) => item as unknown as ReactNode,
   loading = false,
   headerClassName = DEFAULT_HEADER_CLASS,
   cellClassName = DEFAULT_CELL_CLASS,
-  render = (item) => item as unknown as ReactNode,
-  rowCount,
-  colCount,
 }: TableProps<T>) {
   return (
     <div className="overflow-x-auto">

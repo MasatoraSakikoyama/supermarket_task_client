@@ -39,6 +39,60 @@ export default function ShopsEditPage() {
   // Mutation for saving account entries
   const createShopAccountEntryList = useCreateShopAccountEntryList();
 
+  // At this point, all data is guaranteed to be loaded
+  const shop = shopResponse?.data || {};
+  const shopAccountTitlesRevenues = shopAccountTitleResponse?.data?.revenues || [];
+  const shopAccountTitlesExpenses = shopAccountTitleResponse?.data?.expenses || [];
+  const shopAccountEntriesHeaders = shopAccountEntryResponse?.data?.headers || [];
+  const shopAccountEntriesRevenues = shopAccountEntryResponse?.data?.revenues || [];
+  const shopAccountEntriesExpenses = shopAccountEntryResponse?.data?.expenses || [];
+
+  // State for editable data
+  const [editedRevenues, setEditedRevenues] = useState(shopAccountEntriesRevenues);
+  const [editedExpenses, setEditedExpenses] = useState(shopAccountEntriesExpenses);
+
+  // Handle cell changes
+  const handleRevenueChange = (rowIndex: number, colIndex: number, value: string) => {
+    let amount = value === '' ? null : parseInt(value, 10);
+    if (amount !== null && isNaN(amount)) {
+        amount = null;
+    }
+
+    const updatedData = [...editedRevenues];
+    updatedData[rowIndex][colIndex].amount = amount;
+    setEditedRevenues(updatedData);
+  };
+
+  const handleExpenseChange = (rowIndex: number, colIndex: number, value: string) => {
+    let amount = value === '' ? null : parseInt(value, 10);
+    if (amount !== null && isNaN(amount)) {
+        amount = null;
+    }
+
+    const updatedData = [...editedExpenses];
+    updatedData[rowIndex][colIndex].amount = amount;
+    setEditedExpenses(updatedData);
+  };
+
+  // Handle save
+  const handleSave = async () => {
+    try {
+      await createShopAccountEntryList.mutateAsync({
+        token,
+        shopId,
+        data: {
+          year,
+          revenues: editedRevenues,
+          expenses: editedExpenses,
+        },
+      });
+      // Navigate back to detail page after successful save
+      router.push(`/shops/${shopId}`);
+    } catch (error) {
+      console.error('Failed to save account entries:', error);
+    }
+  };
+
   // Constants for styling
   const BORDER_RIGHT_HEADER_CLASS = 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200';
   const BORDER_RIGHT_CELL_CLASS = 'px-3 md:px-6 py-4 text-sm font-medium text-gray-900 border-r border-gray-200';
@@ -77,62 +131,6 @@ export default function ShopsEditPage() {
       </div>
     );
   }
-
-  // At this point, all data is guaranteed to be loaded
-  const shop = shopResponse!.data!;
-  const shopAccountTitlesRevenues = shopAccountTitleResponse!.data!.revenues || [];
-  const shopAccountTitlesExpenses = shopAccountTitleResponse!.data!.expenses || [];
-  const shopAccountEntriesHeaders = shopAccountEntryResponse!.data!.headers || [];
-  const shopAccountEntriesRevenues = shopAccountEntryResponse!.data!.revenues || [];
-  const shopAccountEntriesExpenses = shopAccountEntryResponse!.data!.expenses || [];
-
-  // State for editable data
-  const [editedRevenues, setEditedRevenues] = useState(shopAccountEntriesRevenues);
-  const [editedExpenses, setEditedExpenses] = useState(shopAccountEntriesExpenses);
-
-  // Handle cell changes - generic handler
-  const handleCellChange = (
-    data: { amount: number | null }[][],
-    setter: React.Dispatch<React.SetStateAction<{ amount: number | null }[][]>>,
-    rowIndex: number,
-    colIndex: number,
-    value: { amount: number | null }
-  ) => {
-    const updatedData = [...data];
-    updatedData[rowIndex][colIndex] = value;
-    setter(updatedData);
-  };
-
-  const handleRevenueChange = (rowIndex: number, colIndex: number, value: { amount: number | null }) => {
-    handleCellChange(editedRevenues, setEditedRevenues, rowIndex, colIndex, value);
-  };
-
-  const handleExpenseChange = (rowIndex: number, colIndex: number, value: { amount: number | null }) => {
-    handleCellChange(editedExpenses, setEditedExpenses, rowIndex, colIndex, value);
-  };
-
-  // Handle save
-  const handleSave = async () => {
-    if (!token) {
-      console.error('No token available');
-      return;
-    }
-
-    try {
-      await createShopAccountEntryList.mutateAsync({
-        token,
-        shopId,
-        data: {
-          revenues: editedRevenues,
-          expenses: editedExpenses,
-        },
-      });
-      // Navigate back to detail page after successful save
-      router.push(`/shops/${shopId}`);
-    } catch (error) {
-      console.error('Failed to save account entries:', error);
-    }
-  };
 
   return (
     <div className="py-4 md:py-8">
@@ -179,75 +177,69 @@ export default function ShopsEditPage() {
 
       <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
         <div className="mb-4 md:mb-6">
-          <h2 className="text-lg md:text-xl font-bold">Account Entries - {year}</h2>
+          <div className="flex gap-0 overflow-x-auto">
+            <div className="flex-shrink-0 min-w-1/4">
+              <Table
+                headers={['Revenunes']}
+                columns={[
+                  {
+                    key: 'name',
+                    render: (item: any) => (
+                      <span className="font-medium">{item.name}</span>
+                    ),
+                    cellClassName: BORDER_RIGHT_CELL_CLASS,
+                  },
+                ]}
+                data={shopAccountTitlesRevenues}
+                loading={isFetchingShopAccountTitle}
+                emptyMessage="No account titles available."
+                headerClassName={BORDER_RIGHT_HEADER_CLASS}
+              />
+            </div>
 
-              <div className="flex gap-0 overflow-x-auto">
-                <div className="flex-shrink-0 min-w-1/4">
-                  <Table
-                    headers={['Revenunes']}
-                    columns={[
-                      {
-                        key: 'name',
-                        render: (item: any) => (
-                          <span className="font-medium">{item.name}</span>
-                        ),
-                        cellClassName: BORDER_RIGHT_CELL_CLASS,
-                      },
-                    ]}
-                    data={shopAccountTitlesRevenues}
-                    loading={isFetchingShopAccountTitle}
-                    emptyMessage="No account titles available."
-                    headerClassName={BORDER_RIGHT_HEADER_CLASS}
-                  />
-                </div>
-
-                <div className="flex-grow min-w-0">
-                  <EditableTableFrom2D
-                    headers={shopAccountEntriesHeaders}
-                    data={editedRevenues}
-                    loading={isFetchingShopAccountTitle}
-                    onChange={handleRevenueChange}
-                    editable={true}
-                    rowCount={shopAccountEntriesHeaders.length}
-                    colCount={shopAccountTitlesRevenues.length}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-0 overflow-x-auto">
-                <div className="flex-shrink-0 min-w-1/4">
-                  <Table
-                    headers={['Expenses']}
-                    columns={[
-                      {
-                        key: 'name',
-                        render: (item: any) => (
-                          <span className="font-medium">{item.name}</span>
-                        ),
-                        cellClassName: BORDER_RIGHT_CELL_CLASS,
-                      },
-                    ]}
-                    data={shopAccountTitlesExpenses}
-                    loading={isFetchingShopAccountTitle}
-                    emptyMessage="No account titles available."
-                    headerClassName={BORDER_RIGHT_HEADER_CLASS}
-                  />
-                </div>
-
-                <div className="flex-grow min-w-0">
-                  <EditableTableFrom2D
-                    headers={shopAccountEntriesHeaders}
-                    data={editedExpenses}
-                    loading={isFetchingShopAccountTitle}
-                    onChange={handleExpenseChange}
-                    editable={true}
-                    rowCount={shopAccountEntriesHeaders.length}
-                    colCount={shopAccountTitlesExpenses.length}
-                  />
-                </div>
-              </div>
+            <div className="flex-grow min-w-0">
+              <EditableTableFrom2D
+                headers={shopAccountEntriesHeaders}
+                data={editedRevenues}
+                getValue={(item) => item.amount !== null ? item.amount : ''}
+                onChange={handleRevenueChange}
+                loading={isFetchingShopAccountTitle}
+              />
             </div>
           </div>
+
+          <div className="flex gap-0 overflow-x-auto">
+            <div className="flex-shrink-0 min-w-1/4">
+              <Table
+                headers={['Expenses']}
+                columns={[
+                  {
+                    key: 'name',
+                    render: (item: any) => (
+                      <span className="font-medium">{item.name}</span>
+                    ),
+                    cellClassName: BORDER_RIGHT_CELL_CLASS,
+                  },
+                ]}
+                data={shopAccountTitlesExpenses}
+                loading={isFetchingShopAccountTitle}
+                emptyMessage="No account titles available."
+                headerClassName={BORDER_RIGHT_HEADER_CLASS}
+              />
+            </div>
+
+            <div className="flex-grow min-w-0">
+              <EditableTableFrom2D
+                headers={shopAccountEntriesHeaders}
+                data={editedExpenses}
+                getValue={(item) => item.amount !== null ? item.amount : ''}
+                onChange={handleExpenseChange}
+                loading={isFetchingShopAccountTitle}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
         <div className="flex space-x-4">
