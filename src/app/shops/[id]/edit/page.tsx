@@ -1,20 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useShop, useShopAccountTitleList, useShopAccountEntryList, useUpdateShop } from '@/lib/hooks';
-import { AccountPeriodTypeLabels, AccountPeriodType } from '@/constants';
+import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
+import { AccountPeriodTypeLabels } from '@/constants';
 import Table, { Column } from '@/components/Table';
 import TableFrom2D from '@/components/TableFrom2D';
 import MessageDisplay from '@/components/MessageDisplay';
 import { ShopAccountTitleResponse } from '@/type/api';
-
-interface FormData {
-  name: string;
-  period_type: AccountPeriodType;
-  is_cumulative: boolean;
-}
 
 export default function ShopsEditPage() {
   const router = useRouter();
@@ -32,14 +25,6 @@ export default function ShopsEditPage() {
   // Use current year as default if year is not provided
   const currentYear = new Date().getFullYear();
   const displayYear = year ?? currentYear;
-  
-  // State for form and messages
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    period_type: AccountPeriodType.Monthly,
-    is_cumulative: false,
-  });
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Fetch data
   const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
@@ -57,62 +42,6 @@ export default function ShopsEditPage() {
     shopId,
     displayYear,
   );
-
-  // Update shop mutation
-  const updateMutation = useUpdateShop();
-
-  // Populate form when shop data is loaded
-  useEffect(() => {
-    if (shopResponse?.data) {
-      const shop = shopResponse.data;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Valid use case: syncing external API data to form state
-      setFormData({
-        name: shop.name,
-        period_type: shop.period_type,
-        is_cumulative: shop.is_cumulative,
-      });
-    }
-  }, [shopResponse]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage(null);
-
-    if (!token || !shopId) {
-      setMessage({ type: 'error', text: 'Invalid shop ID or authentication token' });
-      return;
-    }
-
-    try {
-      const result = await updateMutation.mutateAsync({
-        token,
-        shopId,
-        data: {
-          name: formData.name,
-          period_type: formData.period_type,
-          is_cumulative: formData.is_cumulative,
-        },
-      });
-
-      if (result.error) {
-        setMessage({ type: 'error', text: result.error });
-      } else {
-        setMessage({ type: 'success', text: 'Shop updated successfully!' });
-        // Optionally navigate back to shops list after a delay
-        setTimeout(() => {
-          router.push(`/shops/${shopId}`);
-        }, 1500);
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update shop';
-      setMessage({ type: 'error', text: errorMessage });
-    }
-  };
 
   // Constants for styling
   const BORDER_RIGHT_HEADER_CLASS = 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200';
@@ -204,10 +133,9 @@ export default function ShopsEditPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-full">
-          <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
-            <div className="mb-4 md:mb-6">
-              <h2 className="text-lg md:text-xl font-bold">Account Entries - {displayYear}</h2>
+      <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
+        <div className="mb-4 md:mb-6">
+          <h2 className="text-lg md:text-xl font-bold">Account Entries - {displayYear}</h2>
 
               <div className="flex gap-0 overflow-x-auto">
                 <div className="flex-shrink-0 min-w-1/4">
@@ -274,7 +202,6 @@ export default function ShopsEditPage() {
               </div>
             </div>
           </div>
-      </form>
     </div>
   );
 }
