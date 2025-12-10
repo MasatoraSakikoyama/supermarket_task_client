@@ -246,7 +246,7 @@ export function useCreateShopAccountEntryList() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopAccountEntryRequest }) =>
-      createShopAccountEntry(token, shopId, data),
+      createShopAccountEntryList(token, shopId, data),
     onSuccess: (_, variables) => {
       // Invalidate account entry list on create
       queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_entry'] });

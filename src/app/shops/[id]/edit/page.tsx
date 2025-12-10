@@ -1,11 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
+import { useShop, useShopAccountTitleList, useShopAccountEntryList, useCreateShopAccountEntryList } from '@/lib/hooks';
 import { AccountPeriodTypeLabels } from '@/constants';
 import Table, { Column } from '@/components/Table';
-import TableFrom2D from '@/components/TableFrom2D';
+import EditableTableFrom2D from '@/components/EditableTableFrom2D';
 import MessageDisplay from '@/components/MessageDisplay';
 import { ShopAccountTitleResponse } from '@/type/api';
 
@@ -34,6 +35,9 @@ export default function ShopsEditPage() {
     shopId,
     year,
   );
+
+  // Mutation for saving account entries
+  const createShopAccountEntryList = useCreateShopAccountEntryList();
 
   // Constants for styling
   const BORDER_RIGHT_HEADER_CLASS = 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200';
@@ -81,6 +85,54 @@ export default function ShopsEditPage() {
   const shopAccountEntriesHeaders = shopAccountEntryResponse!.data!.headers || [];
   const shopAccountEntriesRevenues = shopAccountEntryResponse!.data!.revenues || [];
   const shopAccountEntriesExpenses = shopAccountEntryResponse!.data!.expenses || [];
+
+  // State for editable data
+  const [editedRevenues, setEditedRevenues] = useState(shopAccountEntriesRevenues);
+  const [editedExpenses, setEditedExpenses] = useState(shopAccountEntriesExpenses);
+
+  // Handle cell changes - generic handler
+  const handleCellChange = (
+    data: { amount: number | null }[][],
+    setter: React.Dispatch<React.SetStateAction<{ amount: number | null }[][]>>,
+    rowIndex: number,
+    colIndex: number,
+    value: { amount: number | null }
+  ) => {
+    const updatedData = [...data];
+    updatedData[rowIndex][colIndex] = value;
+    setter(updatedData);
+  };
+
+  const handleRevenueChange = (rowIndex: number, colIndex: number, value: { amount: number | null }) => {
+    handleCellChange(editedRevenues, setEditedRevenues, rowIndex, colIndex, value);
+  };
+
+  const handleExpenseChange = (rowIndex: number, colIndex: number, value: { amount: number | null }) => {
+    handleCellChange(editedExpenses, setEditedExpenses, rowIndex, colIndex, value);
+  };
+
+  // Handle save
+  const handleSave = async () => {
+    if (!token) {
+      console.error('No token available');
+      return;
+    }
+
+    try {
+      await createShopAccountEntryList.mutateAsync({
+        token,
+        shopId,
+        data: {
+          revenues: editedRevenues,
+          expenses: editedExpenses,
+        },
+      });
+      // Navigate back to detail page after successful save
+      router.push(`/shops/${shopId}`);
+    } catch (error) {
+      console.error('Failed to save account entries:', error);
+    }
+  };
 
   return (
     <div className="py-4 md:py-8">
@@ -150,11 +202,12 @@ export default function ShopsEditPage() {
                 </div>
 
                 <div className="flex-grow min-w-0">
-                  <TableFrom2D
+                  <EditableTableFrom2D
                     headers={shopAccountEntriesHeaders}
-                    data={shopAccountEntriesRevenues}
+                    data={editedRevenues}
                     loading={isFetchingShopAccountTitle}
-                    render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
+                    onChange={handleRevenueChange}
+                    editable={true}
                     rowCount={shopAccountEntriesHeaders.length}
                     colCount={shopAccountTitlesRevenues.length}
                   />
@@ -182,11 +235,12 @@ export default function ShopsEditPage() {
                 </div>
 
                 <div className="flex-grow min-w-0">
-                  <TableFrom2D
+                  <EditableTableFrom2D
                     headers={shopAccountEntriesHeaders}
-                    data={shopAccountEntriesExpenses}
+                    data={editedExpenses}
                     loading={isFetchingShopAccountTitle}
-                    render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
+                    onChange={handleExpenseChange}
+                    editable={true}
                     rowCount={shopAccountEntriesHeaders.length}
                     colCount={shopAccountTitlesExpenses.length}
                   />
@@ -194,6 +248,25 @@ export default function ShopsEditPage() {
               </div>
             </div>
           </div>
+
+      <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
+        <div className="flex space-x-4">
+          <button
+            type="button"
+            onClick={handleSave}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm md:text-base"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push(`/shops/${shopId}`)}
+            className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm md:text-base"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
