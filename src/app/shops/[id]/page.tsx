@@ -81,11 +81,11 @@ export default function ShopsDetailPage() {
 
   // At this point, all data is guaranteed to be loaded
   const shop = shopResponse!.data!;
-  const shopAccountTitlesRevenues = shopAccountTitleResponse!.data.revenues || [];
-  const shopAccountTitlesExpenses = shopAccountTitleResponse!.data.expenses || [];
-  const shopAccountEntriesHeaders = shopAccountEntryResponse!.data.headers || [];
-  const shopAccountEntriesRevenues = shopAccountEntryResponse!.data.revenues || [];
-  const shopAccountEntriesExpenses = shopAccountEntryResponse!.data.expenses || [];
+  const shopAccountTitlesRevenues = shopAccountTitleResponse!.data!.revenues || [];
+  const shopAccountTitlesExpenses = shopAccountTitleResponse!.data!.expenses || [];
+  const shopAccountEntriesHeaders = shopAccountEntryResponse!.data!.headers || [];
+  const shopAccountEntriesRevenues = shopAccountEntryResponse!.data!.revenues || [];
+  const shopAccountEntriesExpenses = shopAccountEntryResponse!.data!.expenses || [];
 
   // Pagination handlers
   const handlePrevPage = () => {
@@ -155,7 +155,7 @@ export default function ShopsDetailPage() {
                 columns={[
                   {
                     key: 'name',
-                    render: (item: Any) => (
+                    render: (item: any) => (
                       <span className="font-medium">{item.name}</span>
                     ),
                     cellClassName: BORDER_RIGHT_CELL_CLASS,
@@ -187,7 +187,7 @@ export default function ShopsDetailPage() {
                 columns={[
                   {
                     key: 'name',
-                    render: (item: Any) => (
+                    render: (item: any) => (
                       <span className="font-medium">{item.name}</span>
                     ),
                     cellClassName: BORDER_RIGHT_CELL_CLASS,

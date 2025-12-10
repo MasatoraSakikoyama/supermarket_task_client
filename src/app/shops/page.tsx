@@ -105,7 +105,6 @@ export default function ShopsPage() {
           data={shops}
           loading={isLoading}
           emptyMessage="No shops available."
-          getRowKey={(shop) => String(shop.id)}
         />
 
         {/* Pagination Controls */}

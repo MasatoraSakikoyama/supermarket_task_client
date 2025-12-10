@@ -2,8 +2,7 @@ import { ReactNode } from 'react';
 
 interface TableProps<T> {
   headers: string[];
-  columns: Any<T>[][];
-  data: T[];
+  data: T[][];
   loading?: boolean;
   headerClassName?: string;
   cellClassName?: string;

@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
 import { AccountPeriodTypeLabels } from '@/constants';
@@ -10,18 +9,18 @@ import TableFrom2D from '@/components/TableFrom2D';
 import MessageDisplay from '@/components/MessageDisplay';
 import { ShopAccountTitleResponse } from '@/type/api';
 
-interface FormData {
-  name: string;
-  period_type: AccountPeriodType;
-  is_cumulative: boolean;
-}
-
 export default function ShopsEditPage() {
   const router = useRouter();
   const { getToken } = useAuth();
   const token = getToken();
   const params = useParams<{ id: string }>();
   const shopId = parseInt(params.id, 10);
+  const searchParams = useSearchParams();
+  
+  // Get year query parameter (number | undefined)
+  const yearParam = searchParams.get('year');
+  const parsedYear = yearParam ? parseInt(yearParam, 10) : NaN;
+  const year: number | undefined = !isNaN(parsedYear) ? parsedYear : undefined;
 
   // Fetch data
   const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
@@ -39,62 +38,6 @@ export default function ShopsEditPage() {
     shopId,
     year,
   );
-
-  // Update shop mutation
-  // const updateMutation = useUpdateShop();
-
-  // Populate form when shop data is loaded
-  useEffect(() => {
-    if (shopResponse?.data) {
-      const shop = shopResponse.data;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Valid use case: syncing external API data to form state
-      setFormData({
-        name: shop.name,
-        period_type: shop.period_type,
-        is_cumulative: shop.is_cumulative,
-      });
-    }
-  }, [shopResponse]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage(null);
-
-    if (!token || !shopId) {
-      setMessage({ type: 'error', text: 'Invalid shop ID or authentication token' });
-      return;
-    }
-
-    try {
-      const result = await updateMutation.mutateAsync({
-        token,
-        shopId,
-        data: {
-          name: formData.name,
-          period_type: formData.period_type,
-          is_cumulative: formData.is_cumulative,
-        },
-      });
-
-      if (result.error) {
-        setMessage({ type: 'error', text: result.error });
-      } else {
-        setMessage({ type: 'success', text: 'Shop updated successfully!' });
-        // Optionally navigate back to shops list after a delay
-        setTimeout(() => {
-          router.push(`/shops/${shopId}`);
-        }, 1500);
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update shop';
-      setMessage({ type: 'error', text: errorMessage });
-    }
-  };
 
   // Constants for styling
   const BORDER_RIGHT_HEADER_CLASS = 'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200';
@@ -137,11 +80,11 @@ export default function ShopsEditPage() {
 
   // At this point, all data is guaranteed to be loaded
   const shop = shopResponse!.data!;
-  const shopAccountTitlesRevenues = shopAccountTitleResponse!.data.revenues || [];
-  const shopAccountTitlesExpenses = shopAccountTitleResponse!.data.expenses || [];
-  const shopAccountEntriesHeaders = shopAccountEntryResponse!.data.headers || [];
-  const shopAccountEntriesRevenues = shopAccountEntryResponse!.data.revenues || [];
-  const shopAccountEntriesExpenses = shopAccountEntryResponse!.data.expenses || [];
+  const shopAccountTitlesRevenues = shopAccountTitleResponse!.data!.revenues || [];
+  const shopAccountTitlesExpenses = shopAccountTitleResponse!.data!.expenses || [];
+  const shopAccountEntriesHeaders = shopAccountEntryResponse!.data!.headers || [];
+  const shopAccountEntriesRevenues = shopAccountEntryResponse!.data!.revenues || [];
+  const shopAccountEntriesExpenses = shopAccountEntryResponse!.data!.expenses || [];
 
   return (
     <div className="py-4 md:py-8">
@@ -186,10 +129,9 @@ export default function ShopsEditPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-full">
-          <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
-            <div className="mb-4 md:mb-6">
-              <h2 className="text-lg md:text-xl font-bold">Account Entries - {year}</h2>
+      <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
+        <div className="mb-4 md:mb-6">
+          <h2 className="text-lg md:text-xl font-bold">Account Entries - {year}</h2>
 
               <div className="flex gap-0 overflow-x-auto">
                 <div className="flex-shrink-0 min-w-1/4">
@@ -198,7 +140,7 @@ export default function ShopsEditPage() {
                     columns={[
                       {
                         key: 'name',
-                        render: (item: Any) => (
+                        render: (item: any) => (
                           <span className="font-medium">{item.name}</span>
                         ),
                         cellClassName: BORDER_RIGHT_CELL_CLASS,
@@ -230,7 +172,7 @@ export default function ShopsEditPage() {
                     columns={[
                       {
                         key: 'name',
-                        render: (item: Any) => (
+                        render: (item: any) => (
                           <span className="font-medium">{item.name}</span>
                         ),
                         cellClassName: BORDER_RIGHT_CELL_CLASS,
@@ -256,7 +198,6 @@ export default function ShopsEditPage() {
               </div>
             </div>
           </div>
-      </form>
     </div>
   );
 }
