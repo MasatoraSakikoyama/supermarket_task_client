@@ -87,17 +87,25 @@ export default function ShopsEditPage() {
   const [editedRevenues, setEditedRevenues] = useState(shopAccountEntriesRevenues);
   const [editedExpenses, setEditedExpenses] = useState(shopAccountEntriesExpenses);
 
-  // Handle cell changes
-  const handleRevenueChange = (rowIndex: number, colIndex: number, value: any) => {
-    const updatedRevenues = [...editedRevenues];
-    updatedRevenues[rowIndex][colIndex] = value;
-    setEditedRevenues(updatedRevenues);
+  // Handle cell changes - generic handler
+  const handleCellChange = (
+    data: { amount: number | null }[][],
+    setter: React.Dispatch<React.SetStateAction<{ amount: number | null }[][]>>,
+    rowIndex: number,
+    colIndex: number,
+    value: { amount: number | null }
+  ) => {
+    const updatedData = [...data];
+    updatedData[rowIndex][colIndex] = value;
+    setter(updatedData);
   };
 
-  const handleExpenseChange = (rowIndex: number, colIndex: number, value: any) => {
-    const updatedExpenses = [...editedExpenses];
-    updatedExpenses[rowIndex][colIndex] = value;
-    setEditedExpenses(updatedExpenses);
+  const handleRevenueChange = (rowIndex: number, colIndex: number, value: { amount: number | null }) => {
+    handleCellChange(editedRevenues, setEditedRevenues, rowIndex, colIndex, value);
+  };
+
+  const handleExpenseChange = (rowIndex: number, colIndex: number, value: { amount: number | null }) => {
+    handleCellChange(editedExpenses, setEditedExpenses, rowIndex, colIndex, value);
   };
 
   // Handle save

@@ -1,6 +1,11 @@
 import { ReactNode, useState, useEffect } from 'react';
 
-interface EditableTableProps<T> {
+interface CellWithAmount {
+  amount: number | null;
+  [key: string]: any;
+}
+
+interface EditableTableProps<T extends CellWithAmount> {
   headers: string[];
   data: T[][];
   loading?: boolean;
@@ -21,14 +26,14 @@ const DEFAULT_CELL_CLASS = "px-3 md:px-6 py-4 text-sm text-gray-900"
 
 const DEFAULT_INPUT_CLASS = "w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 
-export default function EditableTableFrom2D<T>({
+export default function EditableTableFrom2D<T extends CellWithAmount>({
   headers,
   data,
   loading = false,
   headerClassName = DEFAULT_HEADER_CLASS,
   cellClassName = DEFAULT_CELL_CLASS,
   inputClassName = DEFAULT_INPUT_CLASS,
-  render = (item) => item as unknown as ReactNode,
+  render = (item) => item.amount !== null ? item.amount.toLocaleString() : '-',
   rowCount,
   colCount,
   onChange,
@@ -50,8 +55,9 @@ export default function EditableTableFrom2D<T>({
     const updatedData = editableData.map((row, rIdx) =>
       row.map((cell, cIdx) => {
         if (rIdx === rowIndex && cIdx === colIndex) {
-          // Assuming T has an amount property (which is the case for ShopAccountEntry)
-          return { ...cell, amount: isNaN(numericValue as number) ? null : numericValue } as T;
+          // Update the amount property
+          const parsedAmount = numericValue === null || isNaN(numericValue) ? null : numericValue;
+          return { ...cell, amount: parsedAmount } as T;
         }
         return cell;
       })
@@ -60,19 +66,16 @@ export default function EditableTableFrom2D<T>({
     setEditableData(updatedData);
     
     // Call the onChange callback with the updated value
-    if (onChange) {
-      const updatedCell = updatedData[rowIndex][colIndex];
-      onChange(rowIndex, colIndex, updatedCell);
-    }
+    const updatedCell = updatedData[rowIndex][colIndex];
+    onChange(rowIndex, colIndex, updatedCell);
   };
 
   const getCellValue = (cell: T): string => {
     // Extract the amount value from the cell
-    const cellWithAmount = cell as { amount: number | null };
-    if (cellWithAmount.amount === null || cellWithAmount.amount === undefined) {
+    if (cell.amount === null || cell.amount === undefined) {
       return '';
     }
-    return String(cellWithAmount.amount);
+    return String(cell.amount);
   };
 
   return (
