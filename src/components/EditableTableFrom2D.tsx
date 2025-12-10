@@ -15,9 +15,9 @@ interface EditableTableProps<T> {
 const DEFAULT_HEADER_CLASS =
   'px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
 
-const DEFAULT_CELL_CLASS = "px-3 md:px-6 py-4 text-sm text-gray-900"
+const DEFAULT_CELL_CLASS = "px-3 md:px-6 text-sm text-gray-900"
 
-const DEFAULT_INPUT_CLASS = "w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+const DEFAULT_INPUT_CLASS = "w-full px-2 py-4 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 
 export default function EditableTableFrom2D<T>({
   headers,
