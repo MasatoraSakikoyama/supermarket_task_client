@@ -174,8 +174,6 @@ export default function ShopsDetailPage() {
                 data={shopAccountEntriesRevenues}
                 loading={isFetchingShopAccountTitle}
                 render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
-                rowCount={shopAccountEntriesHeaders.length}
-                colCount={shopAccountTitlesRevenues.length}
               />
             </div>
           </div>
@@ -206,8 +204,6 @@ export default function ShopsDetailPage() {
                 data={shopAccountEntriesExpenses}
                 loading={isFetchingShopAccountTitle}
                 render={(item) => item.amount !== null ? item.amount.toLocaleString() : '-'}
-                rowCount={shopAccountEntriesHeaders.length}
-                colCount={shopAccountTitlesExpenses.length}
               />
             </div>
           </div>
