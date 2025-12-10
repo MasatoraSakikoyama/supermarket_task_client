@@ -2,8 +2,8 @@ import { ReactNode } from 'react';
 
 interface TableProps<T> {
   headers: string[];
-  columns: Any<T>[][];
-  data: T[];
+  columns?: any;
+  data: T[][];
   loading?: boolean;
   headerClassName?: string;
   cellClassName?: string;

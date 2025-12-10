@@ -17,6 +17,7 @@ import {
   ShopAccountEntryCreate,
   ShopAccountEntryUpdate,
   ShopAccountEntryResponse,
+  ShopAccountEntryListResponse,
   ShopAccountTitleCreate,
   ShopAccountTitleUpdate,
   ShopAccountTitleResponse,
@@ -284,9 +285,9 @@ export async function getShopAccountEntryList(
   token: string,
   shopId: number,
   year: number,
-): Promise<ApiResponse<ShopAccountEntryResponse[]>> {
+): Promise<ApiResponse<ShopAccountEntryListResponse>> {
   const params = new URLSearchParams({ year: String(year) });
-  return get<ShopAccountEntryResponse[]>(`/shop/${shopId}/account_entry?${params}`, {
+  return get<ShopAccountEntryListResponse>(`/shop/${shopId}/account_entry?${params}`, {
     'Authorization': `Bearer ${token}`,
   });
 }

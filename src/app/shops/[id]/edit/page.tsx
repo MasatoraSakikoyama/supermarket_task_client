@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useShop, useShopAccountTitleList, useShopAccountEntryList } from '@/lib/hooks';
-import { AccountPeriodTypeLabels } from '@/constants';
+import { useShop, useShopAccountTitleList, useShopAccountEntryList, useUpdateShop } from '@/lib/hooks';
+import { AccountPeriodTypeLabels, AccountPeriodType } from '@/constants';
 import Table, { Column } from '@/components/Table';
 import TableFrom2D from '@/components/TableFrom2D';
 import MessageDisplay from '@/components/MessageDisplay';
@@ -22,6 +22,23 @@ export default function ShopsEditPage() {
   const token = getToken();
   const params = useParams<{ id: string }>();
   const shopId = parseInt(params.id, 10);
+  const searchParams = useSearchParams();
+  
+  // Get year query parameter (number | undefined)
+  const yearParam = searchParams.get('year');
+  const year: number | undefined = yearParam ? parseInt(yearParam, 10) : undefined;
+  
+  // Use current year as default if year is not provided
+  const currentYear = new Date().getFullYear();
+  const displayYear = year ?? currentYear;
+  
+  // State for form and messages
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    period_type: AccountPeriodType.Monthly,
+    is_cumulative: false,
+  });
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Fetch data
   const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
@@ -37,11 +54,11 @@ export default function ShopsEditPage() {
   const { data: shopAccountEntryResponse, isLoading: isFetchingShopAccountEntry, error: fetchShopAccountEntryError } = useShopAccountEntryList(
     token,
     shopId,
-    year,
+    displayYear,
   );
 
   // Update shop mutation
-  // const updateMutation = useUpdateShop();
+  const updateMutation = useUpdateShop();
 
   // Populate form when shop data is loaded
   useEffect(() => {
@@ -137,11 +154,11 @@ export default function ShopsEditPage() {
 
   // At this point, all data is guaranteed to be loaded
   const shop = shopResponse!.data!;
-  const shopAccountTitlesRevenues = shopAccountTitleResponse!.data.revenues || [];
-  const shopAccountTitlesExpenses = shopAccountTitleResponse!.data.expenses || [];
-  const shopAccountEntriesHeaders = shopAccountEntryResponse!.data.headers || [];
-  const shopAccountEntriesRevenues = shopAccountEntryResponse!.data.revenues || [];
-  const shopAccountEntriesExpenses = shopAccountEntryResponse!.data.expenses || [];
+  const shopAccountTitlesRevenues = shopAccountTitleResponse!.data!.revenues || [];
+  const shopAccountTitlesExpenses = shopAccountTitleResponse!.data!.expenses || [];
+  const shopAccountEntriesHeaders = shopAccountEntryResponse!.data!.headers || [];
+  const shopAccountEntriesRevenues = shopAccountEntryResponse!.data!.revenues || [];
+  const shopAccountEntriesExpenses = shopAccountEntryResponse!.data!.expenses || [];
 
   return (
     <div className="py-4 md:py-8">
@@ -189,7 +206,7 @@ export default function ShopsEditPage() {
       <form onSubmit={handleSubmit} className="w-full">
           <div className="w-full bg-white shadow rounded-lg p-4 mt-4">
             <div className="mb-4 md:mb-6">
-              <h2 className="text-lg md:text-xl font-bold">Account Entries - {year}</h2>
+              <h2 className="text-lg md:text-xl font-bold">Account Entries - {displayYear}</h2>
 
               <div className="flex gap-0 overflow-x-auto">
                 <div className="flex-shrink-0 min-w-1/4">
@@ -198,7 +215,7 @@ export default function ShopsEditPage() {
                     columns={[
                       {
                         key: 'name',
-                        render: (item: Any) => (
+                        render: (item: any) => (
                           <span className="font-medium">{item.name}</span>
                         ),
                         cellClassName: BORDER_RIGHT_CELL_CLASS,
@@ -230,7 +247,7 @@ export default function ShopsEditPage() {
                     columns={[
                       {
                         key: 'name',
-                        render: (item: Any) => (
+                        render: (item: any) => (
                           <span className="font-medium">{item.name}</span>
                         ),
                         cellClassName: BORDER_RIGHT_CELL_CLASS,
