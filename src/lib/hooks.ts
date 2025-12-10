@@ -14,15 +14,9 @@ import {
   updateShop,
   deleteShop,
   getShopAccountEntryList,
-  getShopAccountEntry,
-  createShopAccountEntry,
-  updateShopAccountEntry,
-  deleteShopAccountEntry,
+  createShopAccountEntryList,
   getShopAccountTitleList,
-  getShopAccountTitle,
-  createShopAccountTitle,
-  updateShopAccountTitle,
-  deleteShopAccountTitle,
+  createShopAccountTitleList,
   get,
   post,
   put,
@@ -33,10 +27,8 @@ import {
   LoginRequest,
   ShopCreate,
   ShopUpdate,
-  ShopAccountEntryCreate,
-  ShopAccountEntryUpdate,
-  ShopAccountTitleCreate,
-  ShopAccountTitleUpdate,
+  ShopAccountEntryRequest,
+  ShopAccountTitleRequest,
 } from '@/type/api';
 
 // =============================================================================
@@ -205,80 +197,15 @@ export function useShopAccountTitleList(
 }
 
 /**
- * Hook for getting a single account title by ID
- */
-export function useShopAccountTitle(
-  token: string | null,
-  shopId: number,
-  accountTitleId: number,
-) {
-  return useQuery({
-    queryKey: ['shop', shopId, 'account_title', accountTitleId],
-    queryFn: () => {
-      if (!token) {
-        throw new Error('No token provided');
-      }
-      return getShopAccountTitle(token, shopId, accountTitleId);
-    },
-    enabled: !!token && shopId > 0 && accountTitleId > 0,
-  });
-}
-
-/**
  * Hook for creating a account title
  */
-export function useCreateShopAccountTitle() {
+export function useCreateShopAccountTitleList() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopAccountTitleCreate }) =>
-      createShopAccountTitle(token, shopId, data),
+    mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopAccountTitleRequest }) =>
+      createShopAccountTitleList(token, shopId, data),
     onSuccess: (_, variables) => {
       // Invalidate account data list on create
-      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_title'] });
-    },
-  });
-}
-
-/**
- * Hook for updating a account title
- */
-export function useUpdateShopAccountTitle() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      token,
-      shopId,
-      accountTitleId,
-      data,
-    }: {
-      token: string;
-      shopId: number;
-      accountTitleId: number;
-      data: ShopAccountTitleUpdate;
-    }) => updateShopAccountTitle(token, shopId, accountTitleId, data),
-    onSuccess: (_, variables) => {
-      // Invalidate specific account data and account data list on update
-      queryClient.invalidateQueries({
-        queryKey: ['shop', variables.shopId, 'account_title', variables.accountTitleId],
-      });
-      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_title'] });
-    },
-  });
-}
-
-/**
- * Hook for deleting a account title
- */
-export function useDeleteShopAccountTitle() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ token, shopId, accountTitleId }: { token: string; shopId: number; accountTitleId: number }) =>
-      deleteShopAccountTitle(token, shopId, accountTitleId),
-    onSuccess: (_, variables) => {
-      // Invalidate specific account data and account data list on delete
-      queryClient.invalidateQueries({
-        queryKey: ['shop', variables.shopId, 'account_title', variables.accountTitleId],
-      });
       queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_title'] });
     },
   });
@@ -313,80 +240,15 @@ export function useShopAccountEntryList(
 }
 
 /**
- * Hook for getting a single account entry by ID
- */
-export function useShopAccountEntry(
-  token: string | null,
-  shopId: number,
-  accountEntryId: number,
-) {
-  return useQuery({
-    queryKey: ['shop', shopId, 'account_entry', accountEntryId],
-    queryFn: () => {
-      if (!token) {
-        throw new Error('No token provided');
-      }
-      return getShopAccountEntry(token, shopId, accountEntryId);
-    },
-    enabled: !!token && shopId > 0 && accountEntryId > 0,
-  });
-}
-
-/**
  * Hook for creating a account entry
  */
-export function useCreateShopAccountEntry() {
+export function useCreateShopAccountEntryList() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopAccountEntryCreate }) =>
+    mutationFn: ({ token, shopId, data }: { token: string; shopId: number; data: ShopAccountEntryRequest }) =>
       createShopAccountEntry(token, shopId, data),
     onSuccess: (_, variables) => {
       // Invalidate account entry list on create
-      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_entry'] });
-    },
-  });
-}
-
-/**
- * Hook for updating a account entry
- */
-export function useUpdateShopAccountEntry() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      token,
-      shopId,
-      accountEntryId,
-      data,
-    }: {
-      token: string;
-      shopId: number;
-      accountEntryId: number;
-      data: ShopAccountEntryUpdate;
-    }) => updateShopAccountEntry(token, shopId, accountEntryId, data),
-    onSuccess: (_, variables) => {
-      // Invalidate specific account entry and account entry list on update
-      queryClient.invalidateQueries({
-        queryKey: ['shop', variables.shopId, 'account_entry', variables.accountEntryId],
-      });
-      queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_entry'] });
-    },
-  });
-}
-
-/**
- * Hook for deleting a account entry
- */
-export function useDeleteShopAccountEntry() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ token, shopId, accountEntryId }: { token: string; shopId: number; accountEntryId: number }) =>
-      deleteShopAccountEntry(token, shopId, accountEntryId),
-    onSuccess: (_, variables) => {
-      // Invalidate specific account entry and account entry list on delete
-      queryClient.invalidateQueries({
-        queryKey: ['shop', variables.shopId, 'account_entry', variables.accountEntryId],
-      });
       queryClient.invalidateQueries({ queryKey: ['shop', variables.shopId, 'account_entry'] });
     },
   });

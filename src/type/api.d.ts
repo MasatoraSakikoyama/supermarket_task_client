@@ -34,8 +34,6 @@ export interface UserResponse {
   id: number;
   username: string;
   email: string;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface LoginRequest {
@@ -72,25 +70,14 @@ export interface ShopResponse {
   description: string | null;
   period_type: AccountPeriodType;
   is_cumulative: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
 // =============================================================================
 // Shop Account Title Types
 // =============================================================================
 
-export interface ShopAccountTitleCreate {
-  shop_id: number;
-  type: AccountTitleType;
-  sub_type?: AccountTitleSubType;
-  code: string;
-  name: string;
-  order: number;
-}
-
-export interface ShopAccountTitleUpdate {
-  id: number;
+export interface ShopAccountTitle {
+  id?: number;
   shop_id: number;
   type?: AccountTitleType;
   sub_type?: AccountTitleSubType;
@@ -99,56 +86,35 @@ export interface ShopAccountTitleUpdate {
   order?: number;
 }
 
-export interface ShopAccountTitleResponse {
-  id: number;
-  shop_id: number;
-  type: AccountTitleType;
-  sub_type: AccountTitleSubType | null;
-  code: string;
-  name: string;
-  order: number;
-  created_at: string;
-  updated_at: string;
+export interface ShopAccountTitleRequest {
+  revenues: ShopAccountTitle[];
+  expenses: ShopAccountTitle[];
 }
 
-export interface ShopAccountTitleListResponse {
-  revenues: ShopAccountTitleResponse[];
-  expenses: ShopAccountTitleResponse[];
+export interface ShopAccountTitleResponse {
+  revenues: ShopAccountTitle[];
+  expenses: ShopAccountTitle[];
 }
 
 // =============================================================================
 // Shop Account Entry Types
 // =============================================================================
 
-export interface ShopAccountEntryCreate {
+export interface ShopAccountEntry {
+  id?: number;
   shop_id: number;
-  shopp_account_title_id: number;
+  shopp_account_title_id?: number;
   year: number;
   month: number;
-  amount: number;
+  amount?: number;
 }
 
-export interface ShopAccountEntryUpdate {
-  id: number;
-  shop_id: number;
-  shopp_account_title_id: number;
-  year: number;
-  month: number;
-  amount: number;
+export interface ShopAccountEntryRequest {
+  revenues: { amount: number | null }[][];
+  expenses: { amount: number | null }[][];
 }
 
 export interface ShopAccountEntryResponse {
-  id: number;
-  shop_id: number;
-  shopp_account_title_id: number;
-  year: number;
-  month: number;
-  amount: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ShopAccountEntryListResponse {
   headers: string[];
   revenues: { amount: number | null }[][];
   expenses: { amount: number | null }[][];

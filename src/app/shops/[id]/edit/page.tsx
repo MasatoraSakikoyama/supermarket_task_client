@@ -16,11 +16,7 @@ export default function ShopsEditPage() {
   const params = useParams<{ id: string }>();
   const shopId = parseInt(params.id, 10);
   const searchParams = useSearchParams();
-  
-  // Get year query parameter (number | undefined)
-  const yearParam = searchParams.get('year');
-  const parsedYear = yearParam ? parseInt(yearParam, 10) : NaN;
-  const year: number | undefined = !isNaN(parsedYear) ? parsedYear : undefined;
+  const year = parseInt(searchParams.get('year'), 10);
 
   // Fetch data
   const { data: shopResponse, isLoading: isFetchingShop, error: fetchShopError } = useShop(
