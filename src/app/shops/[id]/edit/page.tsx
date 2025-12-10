@@ -26,7 +26,8 @@ export default function ShopsEditPage() {
   
   // Get year query parameter (number | undefined)
   const yearParam = searchParams.get('year');
-  const year: number | undefined = yearParam ? parseInt(yearParam, 10) : undefined;
+  const parsedYear = yearParam ? parseInt(yearParam, 10) : NaN;
+  const year: number | undefined = !isNaN(parsedYear) ? parsedYear : undefined;
   
   // Use current year as default if year is not provided
   const currentYear = new Date().getFullYear();
